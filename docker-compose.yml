@@ -1,0 +1,42 @@
+services:
+  node1:
+    image: passage
+    build: .
+    command: just docker-init 10.1.0.1
+    configs:
+      - source: node1.yml
+        target: /app/config.yml
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - net
+
+  node2:
+    image: passage
+    build: .
+    command: just docker-init 10.1.0.2
+    configs:
+      - source: node2.yml
+        target: /app/config.yml
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - net
+
+configs:
+  node1.yml:
+    content: |
+      log:
+        level: debug
+      peers:
+        - addr: "node2:8888"
+
+  node2.yml:
+    content: |
+      log:
+        level: debug
+      peers:
+        - addr: "node1:8888"
+
+networks:
+  net:
