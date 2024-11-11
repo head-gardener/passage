@@ -34,7 +34,7 @@ check-packaging:
   just run-no-sudo -help
   sleep 2
   nix build .#passage --print-out-paths | xargs -I _ sh -c "_/bin/passage -help"
-  just run-docker -help
+  just run-docker -help ""
 
 # repeatedly listens for logs from docker compose
 watch-logs:
@@ -50,9 +50,10 @@ check: build-docker
   docker compose exec node1 ping -c 4 10.1.0.2
 
 # runs docker image with defaults for testing
-run-docker args="": build-docker
+run-docker args="" interactive="-it": build-docker
   docker run -v ./examples/config.yml:/config.yml \
-    --cap-add NET_ADMIN --rm -it passage passage-wrapped 10.1.0.1 {{ args }}
+    --cap-add NET_ADMIN --rm {{ interactive }} \
+    passage passage-wrapped 10.1.0.1 {{ args }}
 
 # builds and loads a docker image with nix
 build-docker:
