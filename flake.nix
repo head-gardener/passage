@@ -7,26 +7,47 @@
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" ];
-      perSystem = { pkgs, ... }: {
+      perSystem = { pkgs, self', ... }: {
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [ go gopls gotools go-tools ];
+          buildInputs = with pkgs; [
+            go
+            gopls
+            gotools
+            go-tools
+            self'.packages.bee2
+          ];
         };
 
-        packages.bee2 = with pkgs; stdenv.mkDerivation {
-          pname = "bee2";
-          version = "v2.1.4";
+        packages.passage = with pkgs;
+          buildGoModule {
+            pname = "passage";
+            version = "v0.0.0";
 
-          src = fetchFromGitHub {
-            owner = "agievich";
-            repo = "bee2";
-            rev = "e0ea53134ff0939857de3e3ead72fa2a5318c6a4";
-            hash = "sha256-Fp2mCUknMD7z4WUkzL0E1FaNtW6WVDU2X94+DegRSFc=";
+            buildInputs = [
+              self'.packages.bee2
+            ];
+
+            src = ./.;
+
+            vendorHash = "sha256-hqcSZ2Peqo7cjQ6+7Ubbhlt8u8autuoVB7BziK0GkKg=";
           };
 
-          nativeBuildInputs = [ cmake ];
+        packages.bee2 = with pkgs;
+          stdenv.mkDerivation {
+            pname = "bee2";
+            version = "v2.1.4";
 
-          doCheck = true;
-        };
+            src = fetchFromGitHub {
+              owner = "agievich";
+              repo = "bee2";
+              rev = "eba3d815b423c9d34a322061c2bec7a09f33d990";
+              hash = "sha256-3qkv1ufMORNFdYYoABB+q/d4rxzNlQHDxvtq1rrbReY=";
+            };
+
+            nativeBuildInputs = [ cmake ];
+
+            doCheck = true;
+          };
       };
     };
 }
