@@ -6,7 +6,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/head-gardener/passage/config"
+	"github.com/head-gardener/passage/pkg"
 
 	"github.com/net-byte/water"
 )
@@ -25,8 +25,9 @@ type Device struct {
 	log *slog.Logger
 }
 
-func listen(dev *Device, conf *config.Config) {
+func listen(dev *Device, conf *pkg.Config) {
 	dev.log.Info("listen init")
+	pkg.Encrypt([]byte("hi"))
 	addr, err := net.ResolveUDPAddr("udp", conf.Listener.Addr)
 	if err != nil {
 		dev.log.Error("error resolving address", "err", err)
@@ -70,7 +71,7 @@ func main() {
 		Level: lvl,
 	}))
 
-	conf, err := config.ReadConfig()
+	conf, err := pkg.ReadConfig()
 	if err != nil {
 		log.Error("error reading config", "err", err)
 		os.Exit(1)
@@ -134,6 +135,7 @@ func main() {
 				log.Error("error sending to peer", err, "err")
 				continue
 			}
+			log.Debug("sent data to peer", "peer", conf.Peers[i])
 		}
 	}
 }

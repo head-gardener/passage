@@ -50,6 +50,7 @@
               version = "v0.0.0";
 
               buildInputs = [bee2];
+              subPackages = ["cmd/passage"];
 
               src = inputs.nix-filter.lib {
                 root = inputs.self;

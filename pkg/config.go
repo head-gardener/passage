@@ -1,4 +1,4 @@
-package config
+package pkg
 
 import (
 	"flag"
@@ -126,21 +126,19 @@ func ReadConfig() (conf Config, err error) {
 	} else {
 		var raw interface{}
 		err = yaml.Unmarshal(f, &raw)
-		if err != nil {
-			return
-		}
+		if err == nil {
+			decoder, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+				DecodeHook: mapstructure.ComposeDecodeHookFunc(
+					StringToLogLevelHook(),
+					StringToUDPAddrHook(),
+				),
+				Result: &file,
+			})
 
-		decoder, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-			DecodeHook: mapstructure.ComposeDecodeHookFunc(
-				StringToLogLevelHook(),
-				StringToUDPAddrHook(),
-			),
-			Result: &file,
-		})
-
-		err = decoder.Decode(raw)
-		if err != nil {
-			return
+			err = decoder.Decode(raw)
+			if err != nil {
+				return
+			}
 		}
 	}
 

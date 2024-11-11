@@ -11,7 +11,7 @@ run:
     sudo ip a add 10.1.0.1/24 dev tun1
     sudo ip l set dev tun1 up
   } &
-  sudo -E go run . -config ./example/config.yml
+  sudo -E go run ./cmd/passage -config ./examples/config.yml
 
 # formats and checks
 pre-commit: format test check
@@ -39,7 +39,7 @@ check: build-docker
 
 # runs docker image with defaults for testing
 run-docker: build-docker
-  docker run -v ./example/config.yml:/config.yml \
+  docker run -v ./examples/config.yml:/config.yml \
     --cap-add NET_ADMIN --rm -it passage passage-wrapped 10.1.0.1
 
 # builds and loads a docker image with nix
