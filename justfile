@@ -13,6 +13,13 @@ run:
   } &
   sudo -E go run . -config ./example/config.yml
 
+# formats and checks
+pre-commit: format test check
+
+# runs go tests
+test:
+  go test ./...
+
 # formats whole tree with treefmt
 format:
   treefmt
