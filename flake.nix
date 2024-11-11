@@ -34,18 +34,45 @@
 
         formatter = config.treefmt.build.wrapper;
 
-        packages = {
+        packages = rec {
           passage = with pkgs;
             buildGoModule {
               pname = "passage";
               version = "v0.0.0";
 
-              buildInputs = [self'.packages.bee2];
+              buildInputs = [bee2];
 
               src = ./.;
 
               vendorHash = "sha256-hqcSZ2Peqo7cjQ6+7Ubbhlt8u8autuoVB7BziK0GkKg=";
             };
+
+          passage-image = pkgs.dockerTools.buildLayeredImage {
+            name = "passage";
+            tag = "latest";
+
+            contents = with pkgs; [
+              coreutils
+              dash
+              iproute
+              iputils
+              netcat
+              passage
+              (pkgs.writeShellScriptBin "passage-wrapped" ''
+                #! /usr/bin/env sh
+                set -ex
+                mkdir -p /dev/net && mknod /dev/net/tun c 10 200
+                {
+                  sleep 2
+                  ip a add "$1/24" dev tun1
+                  ip l set dev tun1 up
+                } &
+                passage
+              '')
+            ];
+
+            config.Cmd = ["passage"];
+          };
 
           bee2 = with pkgs;
             stdenv.mkDerivation {
