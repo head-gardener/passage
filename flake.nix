@@ -11,10 +11,8 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             go
-            gopls
-            gotools
-            go-tools
             self'.packages.bee2
+            just
           ];
         };
 

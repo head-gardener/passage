@@ -1,5 +1,5 @@
 pipeline {
-	agent { label 'nix' }
+	agent { label 'nix && docker' }
 
 	triggers {
 		pollSCM('H/5 * * * *')
@@ -15,6 +15,12 @@ pipeline {
 							sh "nix build .#${name}"
 						}
 				}
+			}
+		}
+
+		stage('check') {
+			steps {
+				sh "nix develop . -c just check"
 			}
 		}
 	}
