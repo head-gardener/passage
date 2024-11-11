@@ -21,8 +21,16 @@
       }: {
         treefmt = {
           projectRootFile = ".git/config";
+
           programs.gofmt.enable = true;
           programs.alejandra.enable = true;
+
+          settings.formatter.eclint = {
+            command = pkgs.eclint;
+            options = ["-fix"];
+            includes = ["*"];
+            excludes = ["*.md"];
+          };
         };
 
         devShells.default = pkgs.mkShell {
@@ -55,6 +63,8 @@
               src = inputs.nix-filter.lib {
                 root = inputs.self;
                 exclude = [
+                  ".editorconfig"
+                  ".envrc"
                   "config.yml"
                   "docker-compose.yml"
                   "flake.lock"

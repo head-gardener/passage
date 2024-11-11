@@ -1,0 +1,26 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 2
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[{jenkinsfile, *.groovy}]
+brace_style = allman
+indent_style = tab
+indent_size = 2
+
+[{*.go,go.mod}]
+brace_style = allman
+indent_style = tab
+indent_size = 2
+gofmt = true
+
+[*.{c,h}]
+brace_style = allman
+indent_style = tab
+indent_size = 2
+insert_final_lf = true

@@ -6,6 +6,12 @@ pipeline {
 	}
 
 	stages {
+		stage('format') {
+			steps {
+				sh "nix develop . -c treefmt --fail-on-change"
+			}
+		}
+
 		stage('test') {
 			steps {
 				sh "nix flake check"
