@@ -25,8 +25,7 @@ type Config struct {
 	}
 
 	Log struct {
-		// TODO: flagfiller fails with redefinition when attempting to set this
-		Level slog.Level `flag:""`
+		Level slog.Level
 
 	}
 

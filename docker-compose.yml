@@ -26,15 +26,11 @@ services:
 configs:
   node1.yml:
     content: |
-      log:
-        level: debug
       peers:
         - addr: "node2:8888"
 
   node2.yml:
     content: |
-      log:
-        level: debug
       peers:
         - addr: "node1:8888"
 

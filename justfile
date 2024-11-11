@@ -20,7 +20,7 @@ docker-init addr:
   #! /usr/bin/env sh
   set -ex
   mkdir -p /dev/net && mknod /dev/net/tun c 10 200
-  ./passage -device-name tun1 -listener-addr "0.0.0.0:8888" &
+  ./passage -log-level debug -device-name tun1 -listener-addr "0.0.0.0:8888" &
   sleep 2
   ip a add {{ addr }}/24 dev tun1
   ip l set dev tun1 up

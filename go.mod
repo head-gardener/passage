@@ -5,7 +5,7 @@ go 1.22.6
 require (
 	dario.cat/mergo v1.0.1
 	github.com/go-viper/mapstructure/v2 v2.2.1
-	github.com/itzg/go-flagsfiller v1.14.0
+	github.com/itzg/go-flagsfiller v1.15.0
 	github.com/net-byte/water v0.0.9
 	gopkg.in/yaml.v3 v3.0.1
 )
