@@ -26,7 +26,6 @@ type Config struct {
 
 	Log struct {
 		Level slog.Level
-
 	}
 
 	Peers []Peer
