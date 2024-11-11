@@ -1,13 +1,25 @@
+default:
+  @just --list
+
 # starts client and configures its interface
 run:
   #!/usr/bin/env sh
   set -ex
+  sudo w > /dev/null
   {
     sleep 2
-    ip a add 10.1.0.1/24 dev tun1
-    ip l set dev tun1 up
+    sudo ip a add 10.1.0.1/24 dev tun1
+    sudo ip l set dev tun1 up
   } &
-  go run . -config ./example/config.yml
+  sudo -E go run . -config ./example/config.yml
+
+# formats whole tree with treefmt
+format:
+  treefmt
+
+# repeatedly listens for logs from docker compose
+watch-logs:
+  while true; do sleep 2; docker compose logs -f; done
 
 # starts docker containers and checks their connectivity
 check: build-docker
