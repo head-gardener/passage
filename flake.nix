@@ -1,6 +1,7 @@
 {
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
+    nix-filter.url = "github:numtide/nix-filter";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     treefmt-nix.url = "github:numtide/treefmt-nix";
 
@@ -15,6 +16,7 @@
         pkgs,
         self',
         config,
+        lib,
         ...
       }: {
         treefmt = {
@@ -34,15 +36,34 @@
 
         formatter = config.treefmt.build.wrapper;
 
+        checks = {
+          pkg-check = self'.packages.passage.override {
+            doCheck = true;
+          };
+        };
+
         packages = rec {
           passage = with pkgs;
+            lib.makeOverridable
             buildGoModule {
               pname = "passage";
               version = "v0.0.0";
 
               buildInputs = [bee2];
 
-              src = ./.;
+              src = inputs.nix-filter.lib {
+                root = inputs.self;
+                exclude = [
+                  "config.yml"
+                  "docker-compose.yml"
+                  "flake.lock"
+                  "flake.nix"
+                  "jenkinsfile"
+                  "justfile"
+                ];
+              };
+
+              doCheck = false;
 
               vendorHash = "sha256-hqcSZ2Peqo7cjQ6+7Ubbhlt8u8autuoVB7BziK0GkKg=";
             };
