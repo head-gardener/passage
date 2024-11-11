@@ -3,15 +3,19 @@ default:
 
 # starts client and configures its interface
 run args = "":
+  sudo -E just run-no-sudo
+
+# same as run but doesn't ask for sudo
+run-no-sudo args = "":
   #!/usr/bin/env sh
   set -ex
-  sudo w > /dev/null
   {
     sleep 2
-    sudo ip a add 10.1.0.1/24 dev tun1
-    sudo ip l set dev tun1 up
+    pgrep "passage" > /dev/null
+    ip a add 10.1.0.1/24 dev tun1
+    ip l set dev tun1 up
   } &
-  sudo -E go run ./cmd/passage -config ./examples/config.yml {{ args }}
+  go run ./cmd/passage -config ./examples/config.yml {{ args }}
 
 # formats and checks
 pre-commit: format test check-packaging check
@@ -26,7 +30,8 @@ format:
 
 # verfies that everything is packaged correctly and starts
 check-packaging:
-  just run -help
+  nix flake check --no-build
+  just run-no-sudo -help
   sleep 2
   nix build .#passage --print-out-paths | xargs -I _ sh -c "_/bin/passage -help"
   just run-docker -help
