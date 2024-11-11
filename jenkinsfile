@@ -24,6 +24,12 @@ pipeline {
 			}
 		}
 
+		stage('check-packaging') {
+			steps {
+				sh "nix develop . -c just check-packaging"
+			}
+		}
+
 		stage('check') {
 			steps {
 				sh "nix develop . -c just check"

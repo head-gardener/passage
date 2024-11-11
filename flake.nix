@@ -84,12 +84,14 @@
                 #! /usr/bin/env sh
                 set -ex
                 mkdir -p /dev/net && mknod /dev/net/tun c 10 200
+                addr="$1"
+                shift
                 {
                   sleep 2
-                  ip a add "$1/24" dev tun1
+                  ip a add "$addr/24" dev tun1
                   ip l set dev tun1 up
                 } &
-                passage
+                passage "$@"
               '')
             ];
 
