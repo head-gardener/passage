@@ -15,7 +15,7 @@ run-no-sudo args = "":
     ip a add 10.1.0.1/24 dev tun1
     ip l set dev tun1 up
   } &
-  go run ./cmd/passage -config ./examples/config.yml {{ args }}
+  exec go run ./cmd/passage -config ./examples/config.yml {{ args }}
 
 # formats and checks
 pre-commit: format test check-packaging check
