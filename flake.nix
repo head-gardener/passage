@@ -101,7 +101,7 @@
                   ip a add "$addr/24" dev tun1
                   ip l set dev tun1 up
                 } &
-                passage "$@"
+                exec passage "$@"
               '')
             ];
 
