@@ -40,14 +40,19 @@ check-packaging:
 watch-logs:
   while true; do sleep 2; docker compose logs -f; done
 
-# starts docker containers and checks their connectivity
-check: build-docker
+# runs compose checks
+check path = "*": build-docker
   #!/usr/bin/env sh
   set -ex
-  trap 'docker compose down' EXIT SIGINT
-  docker compose up --build -d
-  sleep 2
-  docker compose exec node1 ping -c 4 10.1.0.2
+  checks="$(find test -type f -name "*{{ path }}*.yml")"
+  echo "--- checks: $checks ---"
+  for c in "$checks"; do
+    docker compose -f "$c" up --build -d
+    sleep 2
+    cmd="$(sed -nr 's/#! (.*)/\1/p' "$c")"
+    docker compose -f "$c" exec $cmd
+    docker compose -f "$c" down
+  done
 
 # runs docker image with defaults for testing
 run-docker args="" interactive="-it": build-docker

@@ -65,12 +65,12 @@
                 exclude = [
                   ".editorconfig"
                   ".envrc"
-                  "config.yml"
-                  "docker-compose.yml"
                   "flake.lock"
                   "flake.nix"
                   "jenkinsfile"
                   "justfile"
+                  (inputs.nix-filter.lib.inDirectory ./examples)
+                  (inputs.nix-filter.lib.inDirectory ./test)
                 ];
               };
 
