@@ -97,7 +97,7 @@
                 addr="$1"
                 shift
                 {
-                  sleep 2
+                  sleep 1
                   ip a add "$addr/24" dev tun1
                   ip l set dev tun1 up
                 } &
