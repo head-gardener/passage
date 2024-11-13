@@ -50,6 +50,7 @@ check path = "*": build-docker
   echo "--- checks: $checks ---"
   for c in "$checks"; do
     docker compose -f "$c" up --build -d
+    docker compose -f "$c" logs &
     sleep 2
     cmd="$(sed -nr 's/#! (.*)/\1/p' "$c")"
     docker compose -f "$c" exec $cmd

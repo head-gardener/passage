@@ -1,4 +1,4 @@
-package pkg
+package crypto
 
 // #cgo LDFLAGS: -lbee2
 // #include <stdlib.h>

@@ -1,10 +1,11 @@
-package pkg
+package config
 
 import (
 	"flag"
 	"fmt"
 	"log/slog"
 	"net"
+	"net/netip"
 	"os"
 	"reflect"
 
@@ -21,7 +22,7 @@ type Config struct {
 	}
 
 	Listener struct {
-		Addr string
+		Addr net.TCPAddr
 	}
 
 	Log struct {
@@ -32,7 +33,7 @@ type Config struct {
 }
 
 type Peer struct {
-	Addr net.UDPAddr
+	Addr net.TCPAddr
 }
 
 func NewConfig() (conf Config) {
@@ -41,7 +42,7 @@ func NewConfig() (conf Config) {
 	conf.Device.MTU = 1430
 	conf.Device.Name = "tun1"
 
-	conf.Listener.Addr = "127.0.0.1:53475"
+	conf.Listener.Addr = *net.TCPAddrFromAddrPort(netip.MustParseAddrPort("0.0.0.0:53475"))
 
 	conf.Log.Level = slog.LevelInfo
 
@@ -50,7 +51,7 @@ func NewConfig() (conf Config) {
 	return
 }
 
-func StringToUDPAddrHook() mapstructure.DecodeHookFunc {
+func StringToTCPAddrHook() mapstructure.DecodeHookFunc {
 	return func(
 		f reflect.Type,
 		t reflect.Type,
@@ -60,11 +61,17 @@ func StringToUDPAddrHook() mapstructure.DecodeHookFunc {
 			return data, nil
 		}
 
-		if t != reflect.TypeOf(net.UDPAddr{}) {
+		if t != reflect.TypeOf(net.TCPAddr{}) {
 			return data, nil
 		}
 
-		return net.ResolveUDPAddr("udp", data.(string))
+		addr, err := netip.ParseAddrPort(data.(string))
+		if err == nil {
+			return net.TCPAddrFromAddrPort(addr), nil
+		}
+
+		// fallback for when addr contains a hostname
+		return net.ResolveTCPAddr("tcp", data.(string))
 	}
 }
 
@@ -97,12 +104,6 @@ func StringToLogLevelHook() mapstructure.DecodeHookFunc {
 	}
 }
 
-func StringToLogLevel(s string, tag reflect.StructTag) (slog.Level, error) {
-	fmt.Println("HEY!!!")
-	os.Exit(1)
-	return slog.LevelDebug, nil
-}
-
 func ReadConfig() (conf Config, err error) {
 	var (
 		confPath  string
@@ -130,7 +131,7 @@ func ReadConfig() (conf Config, err error) {
 			decoder, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 				DecodeHook: mapstructure.ComposeDecodeHookFunc(
 					StringToLogLevelHook(),
-					StringToUDPAddrHook(),
+					StringToTCPAddrHook(),
 				),
 				Result: &file,
 			})

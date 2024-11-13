@@ -62,15 +62,11 @@
 
               src = inputs.nix-filter.lib {
                 root = inputs.self;
-                exclude = [
-                  ".editorconfig"
-                  ".envrc"
-                  "flake.lock"
-                  "flake.nix"
-                  "jenkinsfile"
-                  "justfile"
-                  (inputs.nix-filter.lib.inDirectory ./examples)
-                  (inputs.nix-filter.lib.inDirectory ./test)
+                include = [
+                  "go.mod"
+                  "go.sum"
+                  (inputs.nix-filter.lib.inDirectory ./cmd)
+                  (inputs.nix-filter.lib.inDirectory ./pkg)
                 ];
               };
 
