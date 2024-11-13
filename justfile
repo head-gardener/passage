@@ -15,7 +15,17 @@ run-no-sudo args = "":
     ip a add 10.1.0.1/24 dev tun1
     ip l set dev tun1 up
   } &
-  exec go run ./cmd/passage -config ./examples/config.yml {{ args }}
+  exec go run ./cmd/passage -config ./examples/node1.yml {{ args }}
+
+# starts two clients, one local and one in docker
+run-pair: build-docker
+  #!/usr/bin/env sh
+  set -ex
+  docker network create --subnet=172.20.0.0/24 passage_test
+  trap 'docker network rm passage_test; exit' EXIT
+  just run-docker "" "--name passage_test --net passage_test --ip 172.20.0.2 -d"
+  trap 'docker container stop passage_test; docker network rm passage_test; exit' EXIT
+  just run "-config examples/node1.yml"
 
 # formats and checks
 pre-commit: format test check-packaging check
@@ -58,10 +68,10 @@ check path = "*": build-docker
   done
 
 # runs docker image with defaults for testing
-run-docker args="" interactive="-it": build-docker
-  docker run -v ./examples/config.yml:/config.yml \
-    --cap-add NET_ADMIN --rm {{ interactive }} \
-    passage passage-wrapped 10.1.0.1 {{ args }}
+run-docker args="" docker_args="-it": build-docker
+  docker run -v ./examples/node2.yml:/config.yml \
+    --cap-add NET_ADMIN --rm {{ docker_args }} \
+    passage passage-wrapped 10.1.0.2 {{ args }}
 
 # builds and loads a docker image with nix
 build-docker:
