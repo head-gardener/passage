@@ -30,6 +30,8 @@ format:
 
 # verfies that everything is packaged correctly and starts
 check-packaging:
+  #!/usr/bin/env sh
+  set -exo pipefail
   nix flake check --no-build
   just run-no-sudo -help
   sleep 2
@@ -62,4 +64,6 @@ run-docker args="" interactive="-it": build-docker
 
 # builds and loads a docker image with nix
 build-docker:
+  #!/usr/bin/env sh
+  set -exo pipefail
   nix build .#passage-image --print-out-paths | xargs -I _ sh -c "cat _ | docker load"
