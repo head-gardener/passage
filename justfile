@@ -61,6 +61,7 @@ check path = "*": build-docker
   for c in "$checks"; do
     docker compose -f "$c" up --build -d
     docker compose -f "$c" logs &
+    trap 'echo "$checks" | xargs -I _ docker compose -f _ down; exit' EXIT
     sleep 2
     cmd="$(sed -nr 's/#! (.*)/\1/p' "$c")"
     docker compose -f "$c" exec $cmd
