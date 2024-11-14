@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/head-gardener/passage/pkg/config"
-	"github.com/head-gardener/passage/pkg/device"
 	"github.com/head-gardener/passage/pkg/net"
 )
 
@@ -34,7 +33,7 @@ func main() {
 
 	log.Debug("final config", "val", fmt.Sprintf("%+v", conf))
 
-	dev, err := device.New(&conf, log)
+	dev, err := net.New(&conf, log, net.HandleConnection)
 	if err != nil {
 		log.Error("error initializing device", "err", err)
 		os.Exit(1)

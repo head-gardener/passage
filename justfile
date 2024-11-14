@@ -18,7 +18,7 @@ run-no-sudo args = "":
   exec go run ./cmd/passage -config ./examples/node1.yml {{ args }}
 
 # starts two clients, one local and one in docker
-run-pair: build-docker
+run-pair:
   #!/usr/bin/env sh
   set -ex
   docker network create --subnet=172.20.0.0/24 passage_test
@@ -60,7 +60,7 @@ check path = "*": build-docker
   echo "--- checks: $checks ---"
   for c in "$checks"; do
     docker compose -f "$c" up --build -d
-    docker compose -f "$c" logs &
+    docker compose -f "$c" logs -f &
     trap 'echo "$checks" | xargs -I _ docker compose -f _ down; exit' EXIT
     sleep 2
     cmd="$(sed -nr 's/#! (.*)/\1/p' "$c")"
