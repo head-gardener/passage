@@ -5,7 +5,7 @@ import (
 )
 
 type Connection struct {
-	tcp *net.TCPConn
+	tcp net.Conn
 }
 
 func (conn *Connection) String() string {
@@ -24,6 +24,10 @@ func (conn *Connection) Dial(addr *net.TCPAddr) (err error) {
 
 	conn.tcp = tcp
 	return
+}
+
+func (conn *Connection) mock(remote net.Conn) {
+	conn.tcp = remote
 }
 
 func (conn *Connection) Close() (closed bool, err error) {

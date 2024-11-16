@@ -22,7 +22,7 @@ pre-commit: format test check-packaging check
 
 # runs go tests
 test:
-  go test ./...
+  go test ./... -v
 
 # formats whole tree with treefmt
 format:
