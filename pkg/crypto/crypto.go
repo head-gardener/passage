@@ -10,18 +10,15 @@ import (
 	"unsafe"
 )
 
-func Encrypt(str []byte) ([]byte, error) {
-	buf := C.malloc(4096)
-	defer C.free(unsafe.Pointer(buf))
-	out := make([]byte, C.sizeof_octet*32)
-
-	fmt.Printf("%x\n", out)
-
-	C.beltHashStart(buf)
-	C.beltHashStepH(unsafe.Pointer(&str[0]), 0, buf)
-	C.beltHashStepG((*C.octet)(unsafe.Pointer(&out[0])), buf)
-
-	fmt.Printf("%x\n", out)
-
-	return out, nil
+// Belt hash via bee2. `out` should be 32 octets long, i.e. 32
+func Hash(str []byte, out []byte) (err error) {
+	ret := C.beltHash(
+		(*C.octet)(unsafe.Pointer(&out[0])),
+		unsafe.Pointer(&str[0]),
+		(C.size_t)(len(str)),
+	)
+	if ret != 0 {
+		return fmt.Errorf("non-zero return: %v", ret)
+	}
+	return nil
 }
