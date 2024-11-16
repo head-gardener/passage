@@ -30,9 +30,10 @@ func Send(dev *Device, conf *config.Config) {
 				dev.Log.Info("dialed peer", "peer", conf.Peers[i])
 			}
 
-			_, err = dev.Peers[0].conn.Write(bufs[0][:n])
+			_, err = dev.Peers[i].conn.Write(bufs[0][:n])
 			if err != nil {
 				dev.Log.Error("error sending to peer", "err", err)
+				dev.Close(i)
 				continue
 			}
 			dev.Log.Debug("peer write", "peer", conf.Peers[i])

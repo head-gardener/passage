@@ -26,17 +26,18 @@ type Device struct {
 
 	Log *slog.Logger
 
-	handler func(*Device, *config.Config, *Connection)
+	handler ConnectionHandler
 }
 
 type Peer struct {
 	conn Connection
+	done chan<- struct{}
 }
 
 func New(
 	conf *config.Config,
 	log *slog.Logger,
-	handler func(*Device, *config.Config, *Connection),
+	handler ConnectionHandler,
 ) (dev *Device, err error) {
 	devconf := water.Config{
 		DeviceType: water.TUN,
@@ -63,8 +64,24 @@ func (dev *Device) EnsureOpen(i int, conf *config.Config) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	go dev.handler(dev, conf, &dev.Peers[i].conn)
+	dev.startConnectionHandler(i, conf)
 	return true, nil
+}
+
+func (dev *Device) startConnectionHandler(i int, conf *config.Config) {
+	done := make(chan struct{}, 2)
+	dev.Peers[i].done = done
+	go dev.handler(i, done, dev, conf, &dev.Peers[i].conn)
+}
+
+func (dev *Device) Close(i int) error {
+	dev.Peers[i].done <- struct{}{}
+	dev.Log.Info("closing connection", "remote", dev.Peers[i].conn.String())
+	closed, err := dev.Peers[i].conn.Close()
+	if !closed {
+		dev.Log.Warn("close requested on a nil connection")
+	}
+	return err
 }
 
 func (dev *Device) InitListener(conf *config.Config) (err error) {
@@ -106,7 +123,7 @@ func (dev *Device) Accept(conf *config.Config) (err error) {
 		}
 		dev.Peers[i].conn.tcp = tcp
 
-		go dev.handler(dev, conf, &dev.Peers[i].conn)
+		dev.startConnectionHandler(i, conf)
 	}
 	if !found {
 		dev.Log.Warn("unexpected connection", "addr", remoteAddr.String())

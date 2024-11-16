@@ -1,9 +1,15 @@
 package net
 
-import "net"
+import (
+	"net"
+)
 
 type Connection struct {
 	tcp *net.TCPConn
+}
+
+func (conn *Connection) String() string {
+	return conn.tcp.RemoteAddr().String()
 }
 
 func (conn *Connection) Dial(addr *net.TCPAddr) (err error) {
@@ -17,6 +23,21 @@ func (conn *Connection) Dial(addr *net.TCPAddr) (err error) {
 	}
 
 	conn.tcp = tcp
+	return
+}
+
+func (conn *Connection) Close() (closed bool, err error) {
+	if conn.tcp == nil {
+		return false, nil
+	}
+
+	err = conn.tcp.Close()
+	if err != nil {
+		return
+	}
+	closed = true
+
+	conn.tcp = nil
 	return
 }
 
@@ -39,7 +60,6 @@ func (conn *Connection) Read(b []byte) (n int, err error) {
 
 func (conn *Connection) Write(b []byte) (n int, err error) {
 	n, err = conn.tcp.Write(b)
-	// TODO: reopen on err?
 	if err != nil {
 		return
 	}

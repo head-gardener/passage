@@ -17,16 +17,6 @@ run-no-sudo args = "":
   } &
   exec go run ./cmd/passage -config ./examples/node1.yml {{ args }}
 
-# starts two clients, one local and one in docker
-run-pair:
-  #!/usr/bin/env sh
-  set -ex
-  docker network create --subnet=172.20.0.0/24 passage_test
-  trap 'docker network rm passage_test; exit' EXIT
-  just run-docker "" "--name passage_test --net passage_test --ip 172.20.0.2 -d"
-  trap 'docker container stop passage_test; docker network rm passage_test; exit' EXIT
-  just run "-config examples/node1.yml"
-
 # formats and checks
 pre-commit: format test check-packaging check
 
@@ -70,7 +60,12 @@ check path = "*": build-docker
 
 # runs docker image with defaults for testing
 run-docker args="" docker_args="-it": build-docker
+  #!/usr/bin/env sh
+  set -ex
+  docker network create --subnet=172.20.0.0/24 passage_test
+  trap 'docker network rm passage_test; exit' EXIT
   docker run -v ./examples/node2.yml:/config.yml \
+    --name passage_test --net passage_test --ip 172.20.0.2 \
     --cap-add NET_ADMIN --rm {{ docker_args }} \
     passage passage-wrapped 10.1.0.2 {{ args }}
 
