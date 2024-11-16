@@ -22,6 +22,83 @@ func conf(maxSize int) quick.Config {
 	}
 }
 
+func mustDecode(t *testing.T, str string) (res []byte) {
+	res, err := hex.DecodeString(str)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return
+}
+
+func TestKDF(t *testing.T) {
+	cases := []struct {
+		input string
+		key   string
+		want  string
+	}{
+		{
+			input: "42313934424143383041303846353342",
+			key:   "BE32971343FC9A48",
+			want:  "3D331BBBB1FBBB40E4BF22F6CB9A689EF13A77DC09ECF93291BFE42439A72E7D",
+		},
+	}
+
+	for i := range cases {
+		out := make([]byte, 32)
+		input := mustDecode(t, cases[i].input)
+		key := mustDecode(t, cases[i].key)
+
+		if err := KDF(out, input, key, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		want := mustDecode(t, cases[i].want)
+		if !bytes.Equal(out, want) {
+			t.Fatalf("no match:\n%x + %x ->\n%x, not\n%x", input, key, out, want)
+		}
+	}
+}
+
+
+func TestHMAC(t *testing.T) {
+	cases := []struct {
+		input string
+		key   string
+		want  string
+	}{
+		{
+			input: "BE32971343FC9A48A02A885F194B09A17ECDA4D01544AF8CA58450BF66D2E88A",
+			key:   "E9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303",
+			want:  "D4828E6312B08BB83C9FA6535A4635549E411FD11C0D8289359A1130E930676B",
+		},
+		{
+			input: "BE32971343FC9A48A02A885F194B09A17ECDA4D01544AF8CA58450BF66D2E88A",
+			key:   "E9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303A98BF6",
+			want:  "41FFE8645AEC0612E952D2CDF8DD508F3E4A1D9B53F6A1DB293B19FE76B1879F",
+		},
+		{
+			input: "BE32971343FC9A48A02A885F194B09A17ECDA4D01544AF8CA58450BF66D2E88A",
+			key:   "E9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303A98BF692BD9B1CE5D141015445",
+			want:  "7D01B84D2315C332277B3653D7EC64707EBA7CDFF7FF70077B1DECBD68F2A144",
+		},
+	}
+
+	for i := range cases {
+		out := make([]byte, 32)
+		input := mustDecode(t, cases[i].input)
+		key := mustDecode(t, cases[i].key)
+
+		if err := HMAC(out, input, key, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		want := mustDecode(t, cases[i].want)
+		if !bytes.Equal(out, want) {
+			t.Fatalf("no match:\n%x + %x ->\n%x, not\n%x", input, key, out, want)
+		}
+	}
+}
+
 func TestHash(t *testing.T) {
 	cases := []struct {
 		input string
@@ -43,30 +120,23 @@ func TestHash(t *testing.T) {
 
 	for i := range cases {
 		out := make([]byte, 32)
-		input, err := hex.DecodeString(cases[i].input)
+		input := mustDecode(t, cases[i].input)
+		if err := Hash(out, input, nil); err != nil {
+			t.Fatal(err)
+		}
+
 		out2 := make([]byte, max(len(input), 32))
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if err := Hash(out, input); err != nil {
-			t.Fatal(err)
-		}
-
 		copy(out2, input)
-		if err := HashWithLength(out2, out2, len(input)); err != nil {
+		if err := Hash(out2, out2, &HashOpt{ srcLen: len(input) }); err != nil {
 			t.Fatal(err)
 		}
 
-		want, err := hex.DecodeString(cases[i].want)
-		if err != nil {
-			t.Fatal(err)
-		}
+		want := mustDecode(t, cases[i].want)
 		if !bytes.Equal(out, want) {
-			t.Fatalf("no match: %x -> %x, not %x", input, out, want)
+			t.Fatalf("no match:\n%x ->\n%x, not\n%x", input, out, want)
 		}
 		if !bytes.Equal(out2[:32], want) {
-			t.Fatalf("in-place no match: %x -> %x, not %x", input, out2, want)
+			t.Fatalf("in-place no match:\n%x ->\n%x, not\n%x", input, out2, want)
 		}
 	}
 }
@@ -80,11 +150,11 @@ func TestHashInPlaceProp(t *testing.T) {
 		if len(b) == 0 {
 			return true
 		}
-		if err := Hash(first, b); err != nil {
+		if err := Hash(first, b, nil); err != nil {
 			t.Fatal(err)
 		}
 		copy(second, b)
-		if err := HashWithLength(second, b, len(b)); err != nil {
+		if err := Hash(second, b, &HashOpt{ srcLen: len(b) }); err != nil {
 			t.Fatal(err)
 		}
 		return bytes.Equal(first, second[:32])
@@ -104,10 +174,10 @@ func TestHashProp(t *testing.T) {
 		if len(b) == 0 {
 			return true
 		}
-		if err := Hash(first, b); err != nil {
+		if err := Hash(first, b, nil); err != nil {
 			t.Fatal(err)
 		}
-		if err := Hash(second, b); err != nil {
+		if err := Hash(second, b, nil); err != nil {
 			t.Fatal(err)
 		}
 		return bytes.Equal(first, second)
