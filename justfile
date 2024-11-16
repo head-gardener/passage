@@ -24,6 +24,10 @@ pre-commit: format test check-packaging check
 test:
   go test ./... -v
 
+# runs go property-based tests
+test-props:
+  seq $(nproc) | xargs -P $(nproc) -I _ go test ./... -quickchecks 10000
+
 # formats whole tree with treefmt
 format:
   treefmt

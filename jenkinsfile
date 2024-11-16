@@ -15,6 +15,7 @@ pipeline {
 		stage('test') {
 			steps {
 				sh "nix flake check"
+				sh "nix develop . -c just test-props"
 			}
 		}
 
