@@ -253,30 +253,10 @@ func TestHash(t *testing.T) {
 	}
 }
 
-func TestHashInPlaceProp(t *testing.T) {
-	first := make([]byte, 32)
-	second := make([]byte, maxSize)
-
-	f := func(b []byte) (ok bool) {
-		if err := Hash(first, b, nil); err != nil {
-			t.Fatal(err)
-		}
-		copy(second, b)
-		if err := Hash(second, second, &CommonOpt{srcLen: len(b)}); err != nil {
-			t.Fatal(err)
-		}
-		return bytes.Equal(first, second[:32])
-	}
-
-	conf := conf(maxSize, 1)
-	if err := quick.Check(f, &conf); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestHashProp(t *testing.T) {
 	first := make([]byte, 32)
 	second := make([]byte, 32)
+	third := make([]byte, maxSize)
 
 	f := func(b []byte) (ok bool) {
 		if len(b) == 0 {
@@ -288,7 +268,11 @@ func TestHashProp(t *testing.T) {
 		if err := Hash(second, b, nil); err != nil {
 			t.Fatal(err)
 		}
-		return bytes.Equal(first, second)
+		copy(third, b)
+		if err := Hash(third, third[:len(b)], nil); err != nil {
+			t.Fatal(err)
+		}
+		return bytes.Equal(first, second) && bytes.Equal(second, third[:32])
 	}
 
 	conf := conf(maxSize, 1)
