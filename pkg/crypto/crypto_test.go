@@ -29,35 +29,45 @@ func mustDecode(t *testing.T, str string) (res []byte) {
 	return
 }
 
+func mustBeKey(t *testing.T, str string) (key BeltKey) {
+	keyBuf := mustDecode(t, str)
+	if len(keyBuf) != 32 {
+		t.Fatalf("invalid length %d for belt key", len(keyBuf))
+	}
+	copy(key[:], keyBuf)
+	return key
+}
+
 func TestKDF(t *testing.T) {
 	cases := []struct {
-		input string
-		key   string
-		want  string
+		pass string
+		salt string
+		want string
 	}{
 		{
-			input: "42313934424143383041303846353342",
-			key:   "BE32971343FC9A48",
-			want:  "3D331BBBB1FBBB40E4BF22F6CB9A689EF13A77DC09ECF93291BFE42439A72E7D",
+			pass: "42313934424143383041303846353342",
+			salt: "BE32971343FC9A48",
+			want: "3D331BBBB1FBBB40E4BF22F6CB9A689EF13A77DC09ECF93291BFE42439A72E7D",
 		},
 	}
 
 	for i := range cases {
-		out := make([]byte, 32)
-		input := mustDecode(t, cases[i].input)
-		key := mustDecode(t, cases[i].key)
+		pass := mustDecode(t, cases[i].pass)
+		salt := mustDecode(t, cases[i].salt)
 
-		if err := KDF(out, input, key, nil); err != nil {
+		key, err := KDF(pass, salt, nil)
+		if err != nil {
 			t.Fatal(err)
 		}
 
 		want := mustDecode(t, cases[i].want)
-		if !bytes.Equal(out, want) {
-			t.Fatalf("no match:\n%x + %x ->\n%x, not\n%x", input, key, out, want)
+		keyBuf := make([]byte, 32)
+		copy(keyBuf, key[:])
+		if !bytes.Equal(keyBuf, want) {
+			t.Fatalf("no match:\n%x + %x ->\n%x, not\n%x", pass, salt, key, want)
 		}
 	}
 }
-
 
 func TestHMAC(t *testing.T) {
 	cases := []struct {
@@ -126,7 +136,7 @@ func TestHash(t *testing.T) {
 
 		out2 := make([]byte, max(len(input), 32))
 		copy(out2, input)
-		if err := Hash(out2, out2, &HashOpt{ srcLen: len(input) }); err != nil {
+		if err := Hash(out2, out2, &CommonOpt{srcLen: len(input)}); err != nil {
 			t.Fatal(err)
 		}
 
@@ -152,7 +162,7 @@ func TestHashInPlaceProp(t *testing.T) {
 			t.Fatal(err)
 		}
 		copy(second, b)
-		if err := Hash(second, second, &HashOpt{ srcLen: len(b) }); err != nil {
+		if err := Hash(second, second, &CommonOpt{srcLen: len(b)}); err != nil {
 			t.Fatal(err)
 		}
 		return bytes.Equal(first, second[:32])

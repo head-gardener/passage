@@ -10,19 +10,25 @@ import (
 	"unsafe"
 )
 
+// Produced by KDF, consumed by everything else. A 32 byte, 256 bit slice.
+type BeltKey [32]byte
+
+type CommonOpt struct {
+	srcLen int
+}
+
 type KDFOpt struct {
 	passLen int
 	saltLen int
 	iter    int
 }
 
-// Belt key derivation via bee2. `out` should be 32 bytes long
+// Belt key derivation via bee2.
 func KDF(
-	out []byte,
 	pass []byte,
 	salt []byte,
 	opt *KDFOpt,
-) (err error) {
+) (key BeltKey, err error) {
 	var passLen int
 	if opt != nil && opt.passLen != 0 {
 		passLen = opt.passLen
@@ -42,6 +48,7 @@ func KDF(
 		iter = 10000
 	}
 
+	var out BeltKey
 	ret := C.beltPBKDF2(
 		(*C.octet)(unsafe.Pointer(&out[0])),
 		(*C.octet)(unsafe.Pointer(&pass[0])),
@@ -51,9 +58,9 @@ func KDF(
 		(C.size_t)(saltLen),
 	)
 	if ret != 0 {
-		return fmt.Errorf("non-zero return: %v", ret)
+		return out, fmt.Errorf("non-zero return: %v", ret)
 	}
-	return nil
+	return out, nil
 }
 
 type HMACOpt struct {
@@ -94,15 +101,11 @@ func HMAC(
 	return nil
 }
 
-type HashOpt struct {
-	srcLen int
-}
-
 // Belt hash via bee2. `out` should be 32 bytes long
 func Hash(
 	out []byte,
 	src []byte,
-	opt *HashOpt,
+	opt *CommonOpt,
 ) (err error) {
 	var srcLen int
 	if opt != nil && opt.srcLen != 0 {
