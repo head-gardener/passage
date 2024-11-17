@@ -172,6 +172,30 @@ func TestKDF(t *testing.T) {
 	}
 }
 
+func TestKDFProp(t *testing.T) {
+	encA := make([]byte, 16)
+	encB := make([]byte, 16)
+
+	f := func(pass []byte) (ok bool) {
+		key := mustDerive(t, pass)
+
+		if err := ECBEncr(encB, encA, key, nil); err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Equal(encA, encB) {
+			t.Fatalf("key %x didn't change input %x", key, encA)
+		}
+		copy(encA, encB)
+
+		return true
+	}
+
+	conf := conf(maxSize, 1)
+	if err := quick.Check(f, &conf); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestHMAC(t *testing.T) {
 	cases := []struct {
 		input string
