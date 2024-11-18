@@ -1,4 +1,4 @@
-package crypto
+package bee2
 
 // #cgo LDFLAGS: -lbee2
 // #include <stdlib.h>
@@ -9,8 +9,8 @@ import (
 	"unsafe"
 )
 
-// Belt cipher feedback decryption via bee2.
-func CFBDecr(
+// Belt cipher block chaining decryption via bee2.
+func CBCDecr(
 	out []byte,
 	src []byte,
 	key BeltKey,
@@ -24,7 +24,7 @@ func CFBDecr(
 		srcLen = len(src)
 	}
 
-	ret := C.beltCFBDecr(
+	ret := C.beltCBCDecr(
 		unsafe.Pointer(&out[0]),
 		unsafe.Pointer(&src[0]),
 		(C.size_t)(srcLen),
@@ -35,8 +35,8 @@ func CFBDecr(
 	return errorMessage(ret)
 }
 
-// Belt cipher feedback encryption via bee2.
-func CFBEncr(
+// Belt cipher block chaining encryption via bee2.
+func CBCEncr(
 	out []byte,
 	src []byte,
 	key BeltKey,
@@ -50,7 +50,7 @@ func CFBEncr(
 		srcLen = len(src)
 	}
 
-	ret := C.beltCFBEncr(
+	ret := C.beltCBCEncr(
 		unsafe.Pointer(&out[0]),
 		unsafe.Pointer(&src[0]),
 		(C.size_t)(srcLen),

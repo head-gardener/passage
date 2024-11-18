@@ -1,4 +1,4 @@
-package crypto
+package bee2
 
 // Produced by KDF, consumed by everything else. Same key shouldn't be used in different
 // algorithms. A 32 byte, 256 bit slice.
