@@ -6,6 +6,7 @@ package bee2
 import "C"
 
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -20,6 +21,13 @@ func Hash(
 		srcLen = opt.srcLen
 	} else {
 		srcLen = len(src)
+	}
+
+	if len(out) == 0 {
+		return fmt.Errorf("empty out")
+	}
+	if len(src) == 0 {
+		return fmt.Errorf("empty src")
 	}
 
 	ret := C.beltHash(

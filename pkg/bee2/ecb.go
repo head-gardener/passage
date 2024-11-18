@@ -6,6 +6,7 @@ package bee2
 import "C"
 
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -21,6 +22,13 @@ func ECBDecr(
 		srcLen = opt.srcLen
 	} else {
 		srcLen = len(src)
+	}
+
+	if len(out) == 0 {
+		return fmt.Errorf("empty out")
+	}
+	if len(src) == 0 {
+		return fmt.Errorf("empty src")
 	}
 
 	ret := C.beltECBDecr(
@@ -45,6 +53,13 @@ func ECBEncr(
 		srcLen = opt.srcLen
 	} else {
 		srcLen = len(src)
+	}
+
+	if len(out) == 0 {
+		return fmt.Errorf("empty out")
+	}
+	if len(src) == 0 {
+		return fmt.Errorf("empty src")
 	}
 
 	ret := C.beltECBEncr(

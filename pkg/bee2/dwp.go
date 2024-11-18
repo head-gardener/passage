@@ -6,6 +6,7 @@ package bee2
 import "C"
 
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -33,6 +34,16 @@ func DWPUnwrap(
 		openLen = opt.openLen
 	} else {
 		openLen = len(open)
+	}
+
+	if len(out) == 0 {
+		return fmt.Errorf("empty out")
+	}
+	if len(crit) == 0 {
+		return fmt.Errorf("empty crit")
+	}
+	if len(open) == 0 {
+		return fmt.Errorf("empty open")
 	}
 
 	ret := C.beltDWPUnwrap(
@@ -72,6 +83,16 @@ func DWPWrap(
 		openLen = opt.openLen
 	} else {
 		openLen = len(open)
+	}
+
+	if len(out) == 0 {
+		return mac, fmt.Errorf("empty out")
+	}
+	if len(crit) == 0 {
+		return mac, fmt.Errorf("empty crit")
+	}
+	if len(open) == 0 {
+		return mac, fmt.Errorf("empty open")
 	}
 
 	ret := C.beltDWPWrap(

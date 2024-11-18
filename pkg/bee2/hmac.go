@@ -6,6 +6,7 @@ package bee2
 import "C"
 
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -32,6 +33,16 @@ func HMAC(
 		keyLen = opt.srcLen
 	} else {
 		keyLen = len(key)
+	}
+
+	if len(out) == 0 {
+		return fmt.Errorf("empty out")
+	}
+	if len(src) == 0 {
+		return fmt.Errorf("empty src")
+	}
+	if len(key) == 0 {
+		return fmt.Errorf("empty key")
 	}
 
 	ret := C.beltHMAC(

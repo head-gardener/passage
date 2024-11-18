@@ -6,6 +6,7 @@ package bee2
 import "C"
 
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -38,6 +39,13 @@ func KDF(
 		iter = opt.iter
 	} else {
 		iter = 10000
+	}
+
+	if len(pass) == 0 {
+		return key, fmt.Errorf("empty pass")
+	}
+	if len(salt) == 0 {
+		return key, fmt.Errorf("empty salt")
 	}
 
 	ret := C.beltPBKDF2(
