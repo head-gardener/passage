@@ -63,6 +63,10 @@ func TestDWP(t *testing.T) {
 		}
 
 		checkDWP(t, &input, &want, key, iv, &enc)
+
+		// nil open
+		input.open = nil
+		identityDWP(t, &input, key, iv, &enc)
 	}
 }
 

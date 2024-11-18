@@ -26,7 +26,10 @@ func DWPUnwrap(
 		critLen = len(crit)
 	}
 	var openLen int
-	if opt != nil && opt.openLen != 0 {
+	if open == nil {
+		open = crit
+		openLen = 0
+	} else if opt != nil && opt.openLen != 0 {
 		openLen = opt.openLen
 	} else {
 		openLen = len(open)
@@ -62,7 +65,10 @@ func DWPWrap(
 		critLen = len(crit)
 	}
 	var openLen int
-	if opt != nil && opt.openLen != 0 {
+	if open == nil {
+		open = crit
+		openLen = 0
+	} else if opt != nil && opt.openLen != 0 {
 		openLen = opt.openLen
 	} else {
 		openLen = len(open)

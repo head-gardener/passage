@@ -63,6 +63,10 @@ func TestCHE(t *testing.T) {
 		}
 
 		checkCHE(t, &input, &want, key, iv, &enc)
+
+		// nil open
+		input.open = nil
+		identityCHE(t, &input, key, iv, &enc)
 	}
 }
 
