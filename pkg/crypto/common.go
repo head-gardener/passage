@@ -73,25 +73,36 @@ func makeCryptoIdentity[D any, O any](
 	decrypt func(out D, src D, key BeltKey, iv BeltIV, opt *O) error,
 ) func(t *testing.T, input D, key BeltKey, iv BeltIV, enc D, dec D) {
 	return func(t *testing.T, input D, key BeltKey, iv BeltIV, enc D, dec D) {
+		fail := func(err any) {
+			t.Fatalf(
+				"\nerr:   %v\nenc:   %x\nkey:   %x\ndec:   %x\ninput: %x",
+				interface{}(err),
+				interface{}(enc),
+				interface{}(key),
+				interface{}(dec),
+				interface{}(input),
+			)
+		}
+
 		if err := encrypt(enc, input, key, iv, opt); err != nil {
-			t.Fatal(err)
+			fail(err)
 		}
 		if err := decrypt(dec, enc, key, iv, opt); err != nil {
-			t.Fatal(err)
+			fail(err)
 		}
 		if !reflect.DeepEqual(dec, input) {
-			t.Fatalf("no decryption:\n%+v + %+v ->\n%+v, not\n%+v", enc, key, dec, input)
+			fail("no decryption, dec != input")
 		}
 
 		// in-place enc/dec
 		if err := encrypt(dec, dec, key, iv, opt); err != nil {
-			t.Fatal(err)
+			fail(err)
 		}
 		if err := decrypt(dec, dec, key, iv, opt); err != nil {
-			t.Fatal(err)
+			fail(err)
 		}
 		if !reflect.DeepEqual(dec, input) {
-			t.Fatalf("in-place no decryption:\n%+v + %+v ->\n%+v, not\n%+v", enc, key, dec, input)
+			fail("no in-place decryption, dec != input")
 		}
 	}
 }
