@@ -6,7 +6,6 @@ package crypto
 import "C"
 
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -42,8 +41,5 @@ func HMAC(
 		(*C.octet)(unsafe.Pointer(&key[0])),
 		(C.size_t)(keyLen),
 	)
-	if ret != 0 {
-		return fmt.Errorf("non-zero return: %v", ret)
-	}
-	return nil
+	return errorMessage(ret)
 }

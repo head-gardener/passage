@@ -6,7 +6,6 @@ package crypto
 import "C"
 
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -41,17 +40,13 @@ func KDF(
 		iter = 10000
 	}
 
-	var out BeltKey
 	ret := C.beltPBKDF2(
-		(*C.octet)(unsafe.Pointer(&out[0])),
+		(*C.octet)(unsafe.Pointer(&key[0])),
 		(*C.octet)(unsafe.Pointer(&pass[0])),
 		(C.size_t)(passLen),
 		(C.size_t)(iter),
 		(*C.octet)(unsafe.Pointer(&salt[0])),
 		(C.size_t)(saltLen),
 	)
-	if ret != 0 {
-		return out, fmt.Errorf("non-zero return: %v", ret)
-	}
-	return out, nil
+	return key, errorMessage(ret)
 }

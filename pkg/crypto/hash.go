@@ -6,7 +6,6 @@ package crypto
 import "C"
 
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -28,8 +27,5 @@ func Hash(
 		unsafe.Pointer(&src[0]),
 		(C.size_t)(srcLen),
 	)
-	if ret != 0 {
-		return fmt.Errorf("non-zero return: %v", ret)
-	}
-	return nil
+	return errorMessage(ret)
 }

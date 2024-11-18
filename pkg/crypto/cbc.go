@@ -6,7 +6,6 @@ package crypto
 import "C"
 
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -33,10 +32,7 @@ func CBCDecr(
 		32,
 		(*C.octet)(unsafe.Pointer(&iv[0])),
 	)
-	if ret != 0 {
-		return fmt.Errorf("non-zero return: %v", ret)
-	}
-	return nil
+	return errorMessage(ret)
 }
 
 // Belt electronic codeblock encryption via bee2.
@@ -62,8 +58,5 @@ func CBCEncr(
 		32,
 		(*C.octet)(unsafe.Pointer(&iv[0])),
 	)
-	if ret != 0 {
-		return fmt.Errorf("non-zero return: %v", ret)
-	}
-	return nil
+	return errorMessage(ret)
 }

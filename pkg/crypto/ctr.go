@@ -6,7 +6,6 @@ package crypto
 import "C"
 
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -33,8 +32,5 @@ func CTR(
 		32,
 		(*C.octet)(unsafe.Pointer(&iv[0])),
 	)
-	if ret != 0 {
-		return fmt.Errorf("non-zero return: %v", ret)
-	}
-	return nil
+	return errorMessage(ret)
 }
