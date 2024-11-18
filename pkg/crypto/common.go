@@ -1,7 +1,6 @@
 package crypto
 
 import (
-	"bytes"
 	"encoding/hex"
 	"math/rand"
 	"reflect"
@@ -68,20 +67,20 @@ func mustContainIV(t *testing.T, str []byte) (iv BeltIV) {
 	return
 }
 
-func makeCryptoIdentity(
-	opt *CommonOpt,
-	encrypt func(out []byte, src []byte, key BeltKey, iv BeltIV, opt *CommonOpt) error,
-	decrypt func(out []byte, src []byte, key BeltKey, iv BeltIV, opt *CommonOpt) error,
-) func(t *testing.T, input []byte, key BeltKey, iv BeltIV, enc []byte, dec []byte) {
-	return func(t *testing.T, input []byte, key BeltKey, iv BeltIV, enc []byte, dec []byte) {
+func makeCryptoIdentity[D any, O any](
+	opt *O,
+	encrypt func(out D, src D, key BeltKey, iv BeltIV, opt *O) error,
+	decrypt func(out D, src D, key BeltKey, iv BeltIV, opt *O) error,
+) func(t *testing.T, input D, key BeltKey, iv BeltIV, enc D, dec D) {
+	return func(t *testing.T, input D, key BeltKey, iv BeltIV, enc D, dec D) {
 		if err := encrypt(enc, input, key, iv, opt); err != nil {
 			t.Fatal(err)
 		}
 		if err := decrypt(dec, enc, key, iv, opt); err != nil {
 			t.Fatal(err)
 		}
-		if !bytes.Equal(dec, input) {
-			t.Fatalf("no decryption:\n%x + %x ->\n%x, not\n%x", enc, key, dec, input)
+		if !reflect.DeepEqual(dec, input) {
+			t.Fatalf("no decryption:\n%+v + %+v ->\n%+v, not\n%+v", enc, key, dec, input)
 		}
 
 		// in-place enc/dec
@@ -91,8 +90,8 @@ func makeCryptoIdentity(
 		if err := decrypt(dec, dec, key, iv, opt); err != nil {
 			t.Fatal(err)
 		}
-		if !bytes.Equal(dec, input) {
-			t.Fatalf("in-place no decryption:\n%x + %x ->\n%x, not\n%x", enc, key, dec, input)
+		if !reflect.DeepEqual(dec, input) {
+			t.Fatalf("in-place no decryption:\n%+v + %+v ->\n%+v, not\n%+v", enc, key, dec, input)
 		}
 	}
 }
