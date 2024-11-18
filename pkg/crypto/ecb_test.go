@@ -1,12 +1,11 @@
 package crypto
 
 import (
-	"bytes"
 	"testing"
 	"testing/quick"
 )
 
-var propECBIdentity = makeCryptoIdentity(nil,
+var identityECB, checkECB = makeCryptoHelpers(nil,
 	func(out, src []byte, key BeltKey, iv BeltIV, opt *CommonOpt) error {
 		return ECBEncr(out, src, key, opt)
 	},
@@ -47,20 +46,14 @@ func TestECB(t *testing.T) {
 		input := mustDecode(t, cases[i].input)
 		key := mustBeKey(t, cases[i].key)
 		enc := make([]byte, len(input))
-		dec := make([]byte, len(input))
-
-		propECBIdentity(t, input, key, BeltIV{}, enc, dec)
-
 		want := mustDecode(t, cases[i].want)
-		if !bytes.Equal(enc, want) {
-			t.Fatalf("no match:\n%x + %x ->\n%x, not\n%x", input, key, enc, want)
-		}
+
+		checkECB(t, input, want, key, BeltIV{}, enc)
 	}
 }
 
 func TestECBProp(t *testing.T) {
 	encBuf := make([]byte, maxSize)
-	decBuf := make([]byte, maxSize)
 
 	f := func(input []byte, pass []byte) (ok bool) {
 		if len(input) < 16 {
@@ -69,9 +62,8 @@ func TestECBProp(t *testing.T) {
 
 		key := mustDerive(t, pass)
 		enc := encBuf[:len(input)]
-		dec := decBuf[:len(input)]
 
-		propECBIdentity(t, input, key, BeltIV{}, enc, dec)
+		identityECB(t, input, key, BeltIV{}, enc)
 
 		return true
 	}

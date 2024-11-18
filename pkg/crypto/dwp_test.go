@@ -1,12 +1,11 @@
 package crypto
 
 import (
-	"reflect"
 	"testing"
 	"testing/quick"
 )
 
-var propDWPIdentity = makeCryptoIdentity(nil,
+var identityDWP, checkDWP = makeCryptoHelpers(nil,
 	func(out *dataAEAD, src *dataAEAD, key BeltKey, iv BeltIV, opt *AEADOpt) error {
 		mac, err := DWPWrap(out.crit, src.crit, src.open, key, iv, opt)
 		out.mac = mac
@@ -57,32 +56,19 @@ func TestDWP(t *testing.T) {
 			open: make([]byte, len(input.open)),
 			mac:  BeltMAC{},
 		}
-		dec := dataAEAD{
-			crit: make([]byte, len(input.crit)),
-			open: make([]byte, len(input.open)),
-			mac:  BeltMAC{},
-		}
-
-		propDWPIdentity(t, &input, key, iv, &enc, &dec)
-
 		want := dataAEAD{
 			crit: mustDecode(t, cases[i].want),
 			open: mustDecode(t, cases[i].open),
 			mac:  mustBeMAC(t, cases[i].mac),
 		}
 
-		if !reflect.DeepEqual(enc, want) {
-			t.Fatalf("no match:\n%+v + %+v ->\n%+v, not\n%+v", input, key, enc, want)
-		}
+		checkDWP(t, &input, &want, key, iv, &enc)
 	}
 }
 
 func TestDWPProp(t *testing.T) {
 	encOpenBuf := make([]byte, maxSize)
-	decOpenBuf := make([]byte, maxSize)
-
 	encCritBuf := make([]byte, maxSize)
-	decCritBuf := make([]byte, maxSize)
 
 	f := func(crit []byte, open []byte, pass []byte) (ok bool) {
 		key := mustDerive(t, pass)
@@ -97,13 +83,8 @@ func TestDWPProp(t *testing.T) {
 			open: encOpenBuf[:len(input.crit)],
 			mac:  BeltMAC{},
 		}
-		dec := dataAEAD{
-			crit: decCritBuf[:len(input.crit)],
-			open: decOpenBuf[:len(input.crit)],
-			mac:  BeltMAC{},
-		}
 
-		propDWPIdentity(t, &input, key, iv, &enc, &dec)
+		identityDWP(t, &input, key, iv, &enc)
 
 		return true
 	}

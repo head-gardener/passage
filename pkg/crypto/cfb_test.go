@@ -1,12 +1,11 @@
 package crypto
 
 import (
-	"bytes"
 	"testing"
 	"testing/quick"
 )
 
-var propCFBIdentity = makeCryptoIdentity(nil, CFBEncr, CFBDecr)
+var identityCFB, checkCFB = makeCryptoHelpers(nil, CFBEncr, CFBDecr)
 
 func TestCFB(t *testing.T) {
 	cases := []struct {
@@ -33,28 +32,21 @@ func TestCFB(t *testing.T) {
 		key := mustBeKey(t, cases[i].key)
 		iv := mustBeIV(t, cases[i].iv)
 		enc := make([]byte, len(input))
-		dec := make([]byte, len(input))
-
-		propCFBIdentity(t, input, key, iv, enc, dec)
-
 		want := mustDecode(t, cases[i].want)
-		if !bytes.Equal(enc, want) {
-			t.Fatalf("no match:\n%x + %x ->\n%x, not\n%x", input, key, enc, want)
-		}
+
+		checkCFB(t, input, want, key, iv, enc)
 	}
 }
 
 func TestCFBProp(t *testing.T) {
 	encBuf := make([]byte, maxSize)
-	decBuf := make([]byte, maxSize)
 
 	f := func(input []byte, pass []byte) (ok bool) {
 		key := mustDerive(t, pass)
 		iv := mustContainIV(t, encBuf)
 		enc := encBuf[:len(input)]
-		dec := decBuf[:len(input)]
 
-		propCFBIdentity(t, input, key, iv, enc, dec)
+		identityCFB(t, input, key, iv, enc)
 
 		return true
 	}

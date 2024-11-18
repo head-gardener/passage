@@ -1,12 +1,11 @@
 package crypto
 
 import (
-	"bytes"
 	"testing"
 	"testing/quick"
 )
 
-var propCTRIdentity = makeCryptoIdentity(nil, CTR, CTR)
+var identityCTR, checkCTR = makeCryptoHelpers(nil, CTR, CTR)
 
 func TestCTR(t *testing.T) {
 	cases := []struct {
@@ -27,28 +26,21 @@ func TestCTR(t *testing.T) {
 		key := mustBeKey(t, cases[i].key)
 		iv := mustBeIV(t, cases[i].iv)
 		enc := make([]byte, len(input))
-		dec := make([]byte, len(input))
-
-		propCTRIdentity(t, input, key, iv, enc, dec)
-
 		want := mustDecode(t, cases[i].want)
-		if !bytes.Equal(enc, want) {
-			t.Fatalf("no match:\n%x + %x ->\n%x, not\n%x", input, key, enc, want)
-		}
+
+		checkCTR(t, input, want, key, iv, enc)
 	}
 }
 
 func TestCTRProp(t *testing.T) {
 	encBuf := make([]byte, maxSize)
-	decBuf := make([]byte, maxSize)
 
 	f := func(input []byte, pass []byte) (ok bool) {
 		key := mustDerive(t, pass)
 		iv := mustContainIV(t, encBuf)
 		enc := encBuf[:len(input)]
-		dec := decBuf[:len(input)]
 
-		propCTRIdentity(t, input, key, iv, enc, dec)
+		identityCTR(t, input, key, iv, enc)
 
 		return true
 	}
