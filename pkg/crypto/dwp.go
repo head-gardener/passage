@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-// Belt electronic codeblock decryption via bee2.
+// Belt AEAD (DWP mode) unwrapping via bee2.
 func DWPUnwrap(
 	out []byte,
 	crit []byte,
@@ -46,7 +46,7 @@ func DWPUnwrap(
 	return errorMessage(ret)
 }
 
-// Belt electronic codeblock encryption via bee2.
+// Belt AEAD (DWP mode) wrapping via bee2.
 func DWPWrap(
 	out []byte,
 	crit []byte,

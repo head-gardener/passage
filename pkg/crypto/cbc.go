@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-// Belt electronic codeblock decryption via bee2.
+// Belt cipher block chaining decryption via bee2.
 func CBCDecr(
 	out []byte,
 	src []byte,
@@ -35,7 +35,7 @@ func CBCDecr(
 	return errorMessage(ret)
 }
 
-// Belt electronic codeblock encryption via bee2.
+// Belt cipher block chaining encryption via bee2.
 func CBCEncr(
 	out []byte,
 	src []byte,

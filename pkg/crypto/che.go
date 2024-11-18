@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-// Belt electronic codeblock decryption via bee2.
+// Belt AEAD (Counter-Hash-Encrypt mode) unwrapping via bee2.
 func CHEUnwrap(
 	out []byte,
 	crit []byte,
@@ -46,7 +46,7 @@ func CHEUnwrap(
 	return errorMessage(ret)
 }
 
-// Belt electronic codeblock encryption via bee2.
+// Belt AEAD (Counter-Hash-Encrypt mode) wrapping via bee2.
 func CHEWrap(
 	out []byte,
 	crit []byte,
