@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -29,6 +30,9 @@ type Config struct {
 		Level slog.Level
 	}
 
+	SecretPath string
+	Secret string
+
 	Peers []Peer
 }
 
@@ -36,7 +40,7 @@ type Peer struct {
 	Addr net.TCPAddr
 }
 
-func NewConfig() (conf Config) {
+func New() (conf Config) {
 	conf = Config{}
 
 	conf.Device.MTU = 1430
@@ -47,6 +51,9 @@ func NewConfig() (conf Config) {
 	conf.Log.Level = slog.LevelInfo
 
 	conf.Peers = []Peer{}
+
+	conf.Secret = ""
+	conf.SecretPath = ""
 
 	return
 }
@@ -104,12 +111,20 @@ func StringToLogLevelHook() mapstructure.DecodeHookFunc {
 	}
 }
 
+func verifyConfig(conf *Config) error {
+	if (conf.Secret == "") == (conf.SecretPath == "") {
+		return errors.New(`one of "secret" or "secretPath" has to be defined`)
+	}
+
+	return nil
+}
+
 func ReadConfig() (conf Config, err error) {
 	var (
 		confPath  string
 		file, env Config
 	)
-	conf = NewConfig()
+	conf = New()
 
 	// _ = flagsfiller.New()
 	filler := flagsfiller.New(flagsfiller.WithEnv("PASSAGE"))
@@ -146,5 +161,17 @@ func ReadConfig() (conf Config, err error) {
 	mergo.MergeWithOverwrite(&conf, file)
 	mergo.MergeWithOverwrite(&conf, env)
 
+	if err := verifyConfig(&conf); err != nil {
+		return conf, fmt.Errorf("error verifying config: %w", err)
+	}
+
 	return
+}
+
+func (conf *Config) GetSecret() ([]byte, error) {
+	if conf.Secret != "" {
+		return []byte(conf.Secret), nil
+	} else {
+		return os.ReadFile(conf.SecretPath)
+	}
 }

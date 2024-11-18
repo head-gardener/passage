@@ -55,17 +55,25 @@ func New(
 	return
 }
 
-func (dev *Device) EnsureOpen(i int, conf *config.Config) (bool, error) {
+func (dev *Device) EnsureOpen(i int, conf *config.Config) (init bool, err error) {
+	init = false
 	if dev.Peers[i].conn.tcp != nil {
-		return false, nil
+		return
 	}
 
-	err := dev.Peers[i].conn.Dial(&conf.Peers[i].Addr)
+	pass, err := conf.GetSecret()
 	if err != nil {
-		return false, err
+		return
+	}
+
+	err = dev.Peers[i].conn.Dial(&conf.Peers[i].Addr, pass)
+	if err != nil {
+		return
 	}
 	dev.startConnectionHandler(i, conf)
-	return true, nil
+
+	init = true
+	return
 }
 
 func (dev *Device) startConnectionHandler(i int, conf *config.Config) {
@@ -109,26 +117,39 @@ func (dev *Device) Accept(conf *config.Config) (err error) {
 	remoteAddr := remote.IP
 
 	found := false
-	for i := range conf.Peers {
-		if !conf.Peers[i].Addr.IP.Equal(remoteAddr) {
-			dev.Log.Debug("no match", "laddr", conf.Peers[i].Addr.IP.String(), "raddr", remoteAddr.String())
-			continue
+
+	i := 0
+	for ; i < len(conf.Peers); i++ {
+		if conf.Peers[i].Addr.IP.Equal(remoteAddr) {
+			found = true
+			break
 		}
-
-		found = true
-
-		dev.Log.Info("initialized connection", "remote", remoteAddr.String())
-		if dev.Peers[i].conn.tcp != nil {
-			dev.Peers[i].conn.tcp.Close()
-		}
-		dev.Peers[i].conn.tcp = tcp
-
-		dev.startConnectionHandler(i, conf)
 	}
+
 	if !found {
-		dev.Log.Warn("unexpected connection", "addr", remoteAddr.String())
 		tcp.Close()
+		return fmt.Errorf("unexpected connection from %s", remoteAddr.String())
 	}
+
+	dev.Log.Info("initialized connection", "remote", remoteAddr.String())
+	if dev.Peers[i].conn.tcp != nil {
+		tcp.Close()
+		return fmt.Errorf("peer already established connection")
+	}
+
+	pass, err := conf.GetSecret()
+	if err != nil {
+		tcp.Close()
+		return err
+	}
+
+	err = dev.Peers[i].conn.Accept(tcp, pass)
+	if err != nil {
+		tcp.Close()
+		return err
+	}
+
+	dev.startConnectionHandler(i, conf)
 
 	return
 }

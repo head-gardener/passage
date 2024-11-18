@@ -32,6 +32,7 @@ configs:
         addr: "0.0.0.0:53475"
       log:
         level: debug
+      secret: hey
 
   node2.yml:
     content: |
@@ -41,6 +42,7 @@ configs:
         addr: "0.0.0.0:53475"
       log:
         level: debug
+      secret: hey
 
 networks:
   net:

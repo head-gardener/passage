@@ -8,6 +8,7 @@ require (
 	github.com/itzg/go-flagsfiller v1.15.0
 	github.com/net-byte/water v0.0.9
 	gopkg.in/yaml.v3 v3.0.1
+	lukechampine.com/uint128 v1.3.0
 )
 
 require (

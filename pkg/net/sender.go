@@ -7,7 +7,7 @@ import (
 func Send(dev *Device, conf *config.Config) {
 	bufs := make([][]byte, 1024)
 	for i := range bufs {
-		bufs[i] = make([]byte, 100)
+		bufs[i] = make([]byte, 2000)
 	}
 
 	for {

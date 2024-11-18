@@ -9,3 +9,5 @@ log:
 
 peers:
   - addr: "172.20.0.1:8888"
+
+secret: secret
