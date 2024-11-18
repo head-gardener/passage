@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"bytes"
 	"encoding/hex"
 	"math/rand"
 	"reflect"
@@ -67,6 +68,36 @@ func mustContainIV(t *testing.T, str []byte) (iv BeltIV) {
 	return
 }
 
+func mustBeMAC(t *testing.T, str string) (mac BeltMAC) {
+	buf := mustDecode(t, str)
+	if len(buf) != 8 {
+		t.Fatalf("invalid length %d for an mac", len(buf))
+	}
+	copy(mac[:], buf)
+	return
+}
+
+type dataAEAD struct {
+	crit []byte
+	open []byte
+	mac  BeltMAC
+}
+
+func compare(a interface{}, b interface{}) bool {
+	if reflect.TypeOf(a) != reflect.TypeOf(b) {
+		return false
+	}
+
+	switch a.(type) {
+	case []byte:
+		return bytes.Equal(a.([]byte), b.([]byte))
+	case *dataAEAD:
+		return bytes.Equal(a.(*dataAEAD).crit, b.(*dataAEAD).crit)
+	default:
+		return reflect.DeepEqual(a, b)
+	}
+}
+
 func makeCryptoIdentity[D any, O any](
 	opt *O,
 	encrypt func(out D, src D, key BeltKey, iv BeltIV, opt *O) error,
@@ -90,7 +121,7 @@ func makeCryptoIdentity[D any, O any](
 		if err := decrypt(dec, enc, key, iv, opt); err != nil {
 			fail(err)
 		}
-		if !reflect.DeepEqual(dec, input) {
+		if !compare(dec, input) {
 			fail("no decryption, dec != input")
 		}
 
@@ -101,7 +132,7 @@ func makeCryptoIdentity[D any, O any](
 		if err := decrypt(dec, dec, key, iv, opt); err != nil {
 			fail(err)
 		}
-		if !reflect.DeepEqual(dec, input) {
+		if !compare(dec, input) {
 			fail("no in-place decryption, dec != input")
 		}
 	}
@@ -114,6 +145,14 @@ type BeltKey [32]byte
 // Must be unique for every session using a single key. A 16 byte, 128 bit slice.
 type BeltIV [16]byte
 
+// Produced and consumed by AEAD functions. A 8 byte, 64 bit slice.
+type BeltMAC [8]byte
+
 type CommonOpt struct {
 	srcLen int
+}
+
+type AEADOpt struct {
+	critLen int
+	openLen int
 }
