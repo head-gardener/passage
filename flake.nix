@@ -67,6 +67,7 @@
                   "go.sum"
                   (inputs.nix-filter.lib.inDirectory ./cmd)
                   (inputs.nix-filter.lib.inDirectory ./pkg)
+                  (inputs.nix-filter.lib.inDirectory ./internal)
                 ];
               };
 

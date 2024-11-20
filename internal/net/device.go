@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net"
 
-	"github.com/head-gardener/passage/pkg/config"
+	"github.com/head-gardener/passage/internal/config"
 
 	"github.com/net-byte/water"
 )

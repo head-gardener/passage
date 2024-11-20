@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/head-gardener/passage/pkg/config"
-	"github.com/head-gardener/passage/pkg/net"
+	"github.com/head-gardener/passage/internal/config"
+	"github.com/head-gardener/passage/internal/net"
 )
 
 func initLog() (log *slog.Logger, lvl *slog.LevelVar) {

@@ -1,7 +1,7 @@
 package net
 
 import (
-	"github.com/head-gardener/passage/pkg/config"
+	"github.com/head-gardener/passage/internal/config"
 )
 
 func Send(dev *Device, conf *config.Config) {

@@ -27,11 +27,11 @@ func handshakeInitiator(tcp net.Conn, pass []byte) (cipher crypto.Cipher, err er
 	rand.Read(salt)
 	cipher, err = crypto.InitCHE(pass, salt)
 	if err != nil {
-	  return
+		return
 	}
 	_, err = tcp.Write(salt)
 	if err != nil {
-	  return
+		return
 	}
 	return
 }
@@ -40,14 +40,14 @@ func handshakeResponder(tcp net.Conn, pass []byte) (cipher crypto.Cipher, err er
 	salt := make([]byte, SaltSize)
 	n, err := tcp.Read(salt)
 	if err != nil {
-	  return
+		return
 	}
 	if n != 32 {
 		return nil, fmt.Errorf("incorrect salt length %d", n)
 	}
 	cipher, err = crypto.InitCHE(pass, salt)
 	if err != nil {
-	  return
+		return
 	}
 	return
 }
@@ -75,8 +75,8 @@ func (conn *Connection) Dial(addr *net.TCPAddr, pass []byte) (err error) {
 
 	cipher, err := handshakeInitiator(tcp, pass)
 	if err != nil {
-	  tcp.Close()
-	  return
+		tcp.Close()
+		return
 	}
 
 	conn.tcp = tcp

@@ -31,7 +31,7 @@ type Config struct {
 	}
 
 	SecretPath string
-	Secret string
+	Secret     string
 
 	Peers []Peer
 }

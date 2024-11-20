@@ -27,11 +27,11 @@ func TestCiphers(t *testing.T) {
 
 		err = cipher.Wrap(buf, b, nil, mac[:])
 		if err != nil {
-		  t.Fatalf("error wrapping: %v", err)
+			t.Fatalf("error wrapping: %v", err)
 		}
 		err = cipher.Unwrap(buf, buf, nil, mac)
 		if err != nil {
-		  t.Fatalf("error wrapping: %v", err)
+			t.Fatalf("error wrapping: %v", err)
 		}
 		cipher.Inc()
 

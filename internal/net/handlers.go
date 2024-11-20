@@ -1,7 +1,7 @@
 package net
 
 import (
-	"github.com/head-gardener/passage/pkg/config"
+	"github.com/head-gardener/passage/internal/config"
 )
 
 type ConnectionHandler func(
