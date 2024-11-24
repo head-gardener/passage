@@ -22,7 +22,7 @@ pre-commit: format test check-packaging check
 
 # runs go tests
 test:
-  go test ./... -v
+  go test ./...
 
 # runs go property-based tests
 test-props:

@@ -1,10 +1,11 @@
 package net
 
-import (
-	"github.com/head-gardener/passage/internal/config"
-)
+import ()
 
-func Send(dev *Device, conf *config.Config) {
+func Sender(
+	handler ConnectionHandler,
+	st *State,
+) {
 	bufs := make([][]byte, 1024)
 	for i := range bufs {
 		bufs[i] = make([]byte, 2000)
@@ -13,30 +14,30 @@ func Send(dev *Device, conf *config.Config) {
 	for {
 		var err error
 
-		n, err := dev.Tun.Dev.Read(bufs[0])
+		n, err := st.tun.Read(bufs[0])
 		if err != nil {
-			dev.Log.Error("error reading tun", "err", err)
+			st.log.Error("error reading tun", "err", err)
 			continue
 		}
-		dev.Log.Debug("tun read", "n", n)
+		st.log.Debug("tun read", "n", n)
 
-		for i := range conf.Peers {
-			init, err := dev.EnsureOpen(i, conf)
+		for i := range st.conf.Peers {
+			init, err := st.netw.EnsureOpen(i, handler, st)
 			if err != nil {
-				dev.Log.Error("error connecting to peer", "err", err)
+				st.log.Error("error connecting to peer", "err", err)
 				continue
 			}
 			if init {
-				dev.Log.Info("dialed peer", "peer", conf.Peers[i])
+				st.log.Info("dialed peer", "peer", st.conf.Peers[i])
 			}
 
-			_, err = dev.Peers[i].conn.Write(bufs[0][:n])
+			_, err = st.netw.Peers[i].conn.Write(bufs[0][:n])
 			if err != nil {
-				dev.Log.Error("error sending to peer", "err", err)
-				dev.Close(i)
+				st.log.Error("error sending to peer", "err", err)
+				st.netw.Close(i, st.log)
 				continue
 			}
-			dev.Log.Debug("peer write", "peer", conf.Peers[i])
+			st.log.Debug("peer write", "peer", st.conf.Peers[i])
 		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"net"
+	"sync"
 
 	"github.com/head-gardener/passage/pkg/bee2"
 	"github.com/head-gardener/passage/pkg/crypto"
@@ -12,13 +13,28 @@ import (
 const HeaderSize = len(bee2.BeltMAC{})
 const SaltSize = len(bee2.BeltKey{})
 
+// Connection is either:
+// closed: tcp == nil
+// open: tcp != nil
+// transitioning: lock is locked
 type Connection struct {
 	tcp    net.Conn
 	cipher crypto.Cipher
+	lock   sync.Mutex
 }
 
 func (conn *Connection) String() string {
 	return conn.tcp.RemoteAddr().String()
+}
+
+func (conn *Connection) IsOpen() bool {
+	conn.lock.Lock()
+	defer conn.lock.Unlock()
+	return conn.isOpenSimple()
+}
+
+func (conn *Connection) isOpenSimple() bool {
+	return conn.tcp != nil
 }
 
 func handshakeInitiator(tcp net.Conn, pass []byte) (cipher crypto.Cipher, err error) {
@@ -53,6 +69,13 @@ func handshakeResponder(tcp net.Conn, pass []byte) (cipher crypto.Cipher, err er
 }
 
 func (conn *Connection) Accept(tcp net.Conn, pass []byte) (err error) {
+	conn.lock.Lock()
+	defer conn.lock.Unlock()
+
+	if conn.isOpenSimple() {
+		return fmt.Errorf("already connected to %v", tcp.RemoteAddr())
+	}
+
 	cipher, err := handshakeResponder(tcp, pass)
 	if err != nil {
 		return err
@@ -64,8 +87,11 @@ func (conn *Connection) Accept(tcp net.Conn, pass []byte) (err error) {
 }
 
 func (conn *Connection) Dial(addr *net.TCPAddr, pass []byte) (err error) {
-	if conn.tcp != nil {
-		conn.tcp.Close()
+	conn.lock.Lock()
+	defer conn.lock.Unlock()
+
+	if conn.isOpenSimple() {
+		return fmt.Errorf("already connected to %v", addr)
 	}
 
 	tcp, err := net.DialTCP("tcp", nil, addr)
@@ -84,20 +110,12 @@ func (conn *Connection) Dial(addr *net.TCPAddr, pass []byte) (err error) {
 	return
 }
 
-func (conn *Connection) mock(remote net.Conn, pass []byte) (err error) {
-	cipher, err := crypto.InitCHE(pass, []byte("salt"))
-	if err != nil {
-		return
-	}
-
-	conn.tcp = remote
-	conn.cipher = cipher
-	return
-}
-
 func (conn *Connection) Close() (closed bool, err error) {
-	if conn.tcp == nil {
-		return false, nil
+	conn.lock.Lock()
+	defer conn.lock.Unlock()
+
+	if !conn.isOpenSimple() {
+		return false, fmt.Errorf("already closed")
 	}
 
 	err = conn.tcp.Close()
@@ -126,12 +144,12 @@ func (conn *Connection) Read(b []byte) (n int, err error) {
 	if err != nil {
 		return
 	}
-	conn.cipher.Inc()
 
 	return body, nil
 }
 
 func (conn *Connection) Write(b []byte) (n int, err error) {
+	// TODO: zero pads and length in header
 	full := len(b) + HeaderSize
 	if cap(b) < full {
 		return 0, fmt.Errorf(
@@ -151,6 +169,5 @@ func (conn *Connection) Write(b []byte) (n int, err error) {
 		return
 	}
 
-	conn.cipher.Inc()
 	return len(b), nil
 }

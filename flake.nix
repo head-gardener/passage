@@ -89,7 +89,7 @@
               passage
               (pkgs.writeShellScriptBin "passage-wrapped" ''
                 #! /usr/bin/env sh
-                set -ex
+                set -e
                 mkdir -p /dev/net && mknod /dev/net/tun c 10 200
                 addr="$1"
                 shift

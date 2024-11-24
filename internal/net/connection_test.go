@@ -6,7 +6,20 @@ import (
 	"testing"
 	"testing/quick"
 	"time"
+
+	"github.com/head-gardener/passage/pkg/crypto"
 )
+
+func (conn *Connection) mock(remote net.Conn, pass []byte) (err error) {
+	cipher, err := crypto.InitCHE(pass, []byte("salt"))
+	if err != nil {
+		return
+	}
+
+	conn.tcp = remote
+	conn.cipher = cipher
+	return
+}
 
 func TestConnetionHandshake(t *testing.T) {
 	nodeA := Connection{}

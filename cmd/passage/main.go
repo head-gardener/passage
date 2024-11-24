@@ -25,7 +25,7 @@ func main() {
 
 	conf, err := config.ReadConfig()
 	if err != nil {
-		log.Error("error reading config", "err", err)
+		log.Error("reading config", "err", err)
 		os.Exit(1)
 	}
 
@@ -33,12 +33,12 @@ func main() {
 
 	log.Debug("final config", "val", fmt.Sprintf("%+v", conf))
 
-	dev, err := net.New(&conf, log, net.HandleConnection)
+	st, err := net.Init(log, conf)
 	if err != nil {
-		log.Error("error initializing device", "err", err)
+		log.Error("initializing", "err", err)
 		os.Exit(1)
 	}
 
-	go net.Listen(dev, &conf)
-	net.Send(dev, &conf)
+	go net.Listen(st)
+	net.Sender(net.HandleConnection, st)
 }

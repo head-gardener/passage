@@ -40,8 +40,8 @@ type Peer struct {
 	Addr net.TCPAddr
 }
 
-func New() (conf Config) {
-	conf = Config{}
+func New() (conf *Config) {
+	conf = new(Config)
 
 	conf.Device.MTU = 1430
 	conf.Device.Name = "tun1"
@@ -55,7 +55,7 @@ func New() (conf Config) {
 	conf.Secret = ""
 	conf.SecretPath = ""
 
-	return
+	return conf
 }
 
 func StringToTCPAddrHook() mapstructure.DecodeHookFunc {
@@ -113,20 +113,20 @@ func StringToLogLevelHook() mapstructure.DecodeHookFunc {
 
 func verifyConfig(conf *Config) error {
 	if (conf.Secret == "") == (conf.SecretPath == "") {
-		return errors.New(`one of "secret" or "secretPath" has to be defined`)
+		return errors.New(`one of "secret" or "secret-path" has to be defined`)
 	}
 
 	return nil
 }
 
-func ReadConfig() (conf Config, err error) {
+func ReadConfig() (conf *Config, err error) {
 	var (
 		confPath  string
 		file, env Config
 	)
 	conf = New()
 
-	// _ = flagsfiller.New()
+	// FIXME: why is -quickcheks here?
 	filler := flagsfiller.New(flagsfiller.WithEnv("PASSAGE"))
 	err = filler.Fill(flag.CommandLine, &env)
 	if err != nil {
@@ -158,10 +158,10 @@ func ReadConfig() (conf Config, err error) {
 		}
 	}
 
-	mergo.MergeWithOverwrite(&conf, file)
-	mergo.MergeWithOverwrite(&conf, env)
+	mergo.MergeWithOverwrite(conf, file)
+	mergo.MergeWithOverwrite(conf, env)
 
-	if err := verifyConfig(&conf); err != nil {
+	if err := verifyConfig(conf); err != nil {
 		return conf, fmt.Errorf("error verifying config: %w", err)
 	}
 

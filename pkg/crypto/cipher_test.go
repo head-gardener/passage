@@ -31,9 +31,8 @@ func TestCiphers(t *testing.T) {
 		}
 		err = cipher.Unwrap(buf, buf, nil, mac)
 		if err != nil {
-			t.Fatalf("error wrapping: %v", err)
+			t.Fatalf("error unwrapping: %v", err)
 		}
-		cipher.Inc()
 
 		if !bytes.Equal(b, buf) {
 			return
