@@ -1,0 +1,3 @@
+oid-to-der oid:
+  gcc -lbee2 oidToDER.c -o oidToDER
+  ./oidToDER {{ oid }}
