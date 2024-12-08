@@ -1,3 +1,7 @@
+urand-gen count:
+  gcc urandGen.c -o urandGen
+  ./urandGen {{ count }}
+
 oid-to-der oid:
   gcc -lbee2 oidToDER.c -o oidToDER
   ./oidToDER {{ oid }}
