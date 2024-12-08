@@ -5,7 +5,7 @@ import (
 	"testing"
 	"testing/quick"
 
-	"github.com/head-gardener/passage/pkg/bee2"
+	"github.com/head-gardener/passage/pkg/bee2/belt"
 )
 
 func TestCiphers(t *testing.T) {
@@ -23,7 +23,7 @@ func TestCiphers(t *testing.T) {
 
 		ok = false
 		buf := make([]byte, len(b))
-		mac := bee2.BeltMAC{}
+		mac := belt.MAC{}
 
 		err = cipher.Wrap(buf, b, nil, mac[:])
 		if err != nil {

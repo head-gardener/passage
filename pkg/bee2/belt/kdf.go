@@ -1,4 +1,4 @@
-package bee2
+package belt
 
 // #cgo LDFLAGS: -lbee2
 // #include <stdlib.h>
@@ -21,7 +21,7 @@ func KDF(
 	pass []byte,
 	salt []byte,
 	opt *KDFOpt,
-) (key BeltKey, err error) {
+) (key Key, err error) {
 	var passLen int
 	if opt != nil && opt.passLen != 0 {
 		passLen = opt.passLen

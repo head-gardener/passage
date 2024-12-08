@@ -1,4 +1,4 @@
-package bee2
+package belt
 
 // #cgo LDFLAGS: -lbee2
 // #include <stdlib.h>
@@ -15,9 +15,9 @@ func DWPUnwrap(
 	out []byte,
 	crit []byte,
 	open []byte,
-	mac BeltMAC,
-	key BeltKey,
-	iv BeltIV,
+	mac MAC,
+	key Key,
+	iv IV,
 	opt *AEADOpt,
 ) (err error) {
 	var critLen int
@@ -65,10 +65,10 @@ func DWPWrap(
 	out []byte,
 	crit []byte,
 	open []byte,
-	key BeltKey,
-	iv BeltIV,
+	key Key,
+	iv IV,
 	opt *AEADOpt,
-) (mac BeltMAC, err error) {
+) (mac MAC, err error) {
 	var critLen int
 	if opt != nil && opt.critLen != 0 {
 		critLen = opt.critLen

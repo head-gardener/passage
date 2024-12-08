@@ -1,4 +1,4 @@
-package bee2
+package belt
 
 // #cgo LDFLAGS: -lbee2
 // #include <stdlib.h>
@@ -14,7 +14,7 @@ import (
 func ECBDecr(
 	out []byte,
 	src []byte,
-	key BeltKey,
+	key Key,
 	opt *CommonOpt,
 ) (err error) {
 	var srcLen int
@@ -45,7 +45,7 @@ func ECBDecr(
 func ECBEncr(
 	out []byte,
 	src []byte,
-	key BeltKey,
+	key Key,
 	opt *CommonOpt,
 ) (err error) {
 	var srcLen int

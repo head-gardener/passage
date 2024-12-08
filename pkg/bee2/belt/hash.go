@@ -1,4 +1,4 @@
-package bee2
+package belt
 
 // #cgo LDFLAGS: -lbee2
 // #include <stdlib.h>

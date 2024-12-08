@@ -1,4 +1,4 @@
-package bee2
+package belt
 
 import (
 	"bytes"
@@ -34,7 +34,7 @@ func mustDecode(t *testing.T, str string) (res []byte) {
 	return
 }
 
-func mustBeKey(t *testing.T, str string) (key BeltKey) {
+func mustBeKey(t *testing.T, str string) (key Key) {
 	keyBuf := mustDecode(t, str)
 	if len(keyBuf) != 32 {
 		t.Fatalf("invalid length %d for belt key", len(keyBuf))
@@ -43,7 +43,7 @@ func mustBeKey(t *testing.T, str string) (key BeltKey) {
 	return
 }
 
-func mustDerive(t *testing.T, str []byte) (key BeltKey) {
+func mustDerive(t *testing.T, str []byte) (key Key) {
 	key, err := KDF(str, []byte{0}, &KDFOpt{iter: 1})
 	if err != nil {
 		t.Fatal(err)
@@ -51,7 +51,7 @@ func mustDerive(t *testing.T, str []byte) (key BeltKey) {
 	return
 }
 
-func mustBeIV(t *testing.T, str string) (iv BeltIV) {
+func mustBeIV(t *testing.T, str string) (iv IV) {
 	ivBuf := mustDecode(t, str)
 	if len(ivBuf) != 16 {
 		t.Fatalf("invalid length %d for an iv", len(ivBuf))
@@ -60,7 +60,7 @@ func mustBeIV(t *testing.T, str string) (iv BeltIV) {
 	return
 }
 
-func mustContainIV(t *testing.T, str []byte) (iv BeltIV) {
+func mustContainIV(t *testing.T, str []byte) (iv IV) {
 	if len(str) < 16 {
 		t.Fatalf("insufficient length %d to form an iv", len(str))
 	}
@@ -68,7 +68,7 @@ func mustContainIV(t *testing.T, str []byte) (iv BeltIV) {
 	return
 }
 
-func mustBeMAC(t *testing.T, str string) (mac BeltMAC) {
+func mustBeMAC(t *testing.T, str string) (mac MAC) {
 	buf := mustDecode(t, str)
 	if len(buf) != 8 {
 		t.Fatalf("invalid length %d for an mac", len(buf))
@@ -80,7 +80,7 @@ func mustBeMAC(t *testing.T, str string) (mac BeltMAC) {
 type dataAEAD struct {
 	crit []byte
 	open []byte
-	mac  BeltMAC
+	mac  MAC
 }
 
 func compare(a interface{}, b interface{}) bool {
@@ -98,9 +98,9 @@ func compare(a interface{}, b interface{}) bool {
 	}
 }
 
-type cryptoF[D any, O any] func(out D, src D, key BeltKey, iv BeltIV, opt *O) error
-type cryptoI[D any, O any] func(t *testing.T, input D, key BeltKey, iv BeltIV, buf D)
-type cryptoC[D any, O any] func(t *testing.T, input D, want D, key BeltKey, iv BeltIV, buf D)
+type cryptoF[D any, O any] func(out D, src D, key Key, iv IV, opt *O) error
+type cryptoI[D any, O any] func(t *testing.T, input D, key Key, iv IV, buf D)
+type cryptoC[D any, O any] func(t *testing.T, input D, want D, key Key, iv IV, buf D)
 
 func makeCryptoHelpers[D any, O any](
 	opt *O,
@@ -114,7 +114,7 @@ func makeCryptoHelpers[D any, O any](
 }
 
 func makeCheck[D any, O any](opt *O, encrypt cryptoF[D, O]) cryptoC[D, O] {
-	return func(t *testing.T, input D, want D, key BeltKey, iv BeltIV, buf D) {
+	return func(t *testing.T, input D, want D, key Key, iv IV, buf D) {
 		fail := func(err any) {
 			t.Fatalf(
 				"\nerr:   %v\nbuf:   %x\nkey:   %x\ninput: %x\nwant:  %x",
@@ -140,7 +140,7 @@ func makeCryptoIdentity[D any, O any](
 	encrypt cryptoF[D, O],
 	decrypt cryptoF[D, O],
 ) cryptoI[D, O] {
-	return func(t *testing.T, input D, key BeltKey, iv BeltIV, buf D) {
+	return func(t *testing.T, input D, key Key, iv IV, buf D) {
 		fail := func(err any) {
 			t.Fatalf(
 				"\nerr:   %v\nbuf:   %x\nkey:   %x\ninput: %x",

@@ -1,4 +1,4 @@
-package bee2
+package belt
 
 import (
 	"testing"
@@ -6,10 +6,10 @@ import (
 )
 
 var identityECB, checkECB = makeCryptoHelpers(nil,
-	func(out, src []byte, key BeltKey, iv BeltIV, opt *CommonOpt) error {
+	func(out, src []byte, key Key, iv IV, opt *CommonOpt) error {
 		return ECBEncr(out, src, key, opt)
 	},
-	func(out, src []byte, key BeltKey, iv BeltIV, opt *CommonOpt) error {
+	func(out, src []byte, key Key, iv IV, opt *CommonOpt) error {
 		return ECBDecr(out, src, key, opt)
 	},
 )
@@ -48,7 +48,7 @@ func TestECB(t *testing.T) {
 		enc := make([]byte, len(input))
 		want := mustDecode(t, cases[i].want)
 
-		checkECB(t, input, want, key, BeltIV{}, enc)
+		checkECB(t, input, want, key, IV{}, enc)
 	}
 }
 
@@ -63,7 +63,7 @@ func TestECBProp(t *testing.T) {
 		key := mustDerive(t, pass)
 		enc := encBuf[:len(input)]
 
-		identityECB(t, input, key, BeltIV{}, enc)
+		identityECB(t, input, key, IV{}, enc)
 
 		return true
 	}

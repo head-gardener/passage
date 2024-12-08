@@ -1,4 +1,4 @@
-package bee2
+package belt
 
 import (
 	"testing"

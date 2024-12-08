@@ -6,12 +6,12 @@ import (
 	"net"
 	"sync"
 
-	"github.com/head-gardener/passage/pkg/bee2"
+	"github.com/head-gardener/passage/pkg/bee2/belt"
 	"github.com/head-gardener/passage/pkg/crypto"
 )
 
-const HeaderSize = len(bee2.BeltMAC{})
-const SaltSize = len(bee2.BeltKey{})
+const HeaderSize = len(belt.MAC{})
+const SaltSize = len(belt.Key{})
 
 // Connection is either:
 // closed: tcp == nil
