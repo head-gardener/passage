@@ -7,8 +7,53 @@ import "C"
 
 import (
 	"fmt"
+	"hash"
 	"unsafe"
 )
+
+type hashstate struct {
+	state []byte
+}
+
+func (h *hashstate) toPtr() unsafe.Pointer {
+	return unsafe.Pointer(&h.state[0])
+}
+
+func HashInit() hash.Hash {
+	h := &hashstate{make([]byte, C.beltHash_keep())}
+	C.beltHashStart(h.toPtr())
+	return h
+}
+
+func (h *hashstate) BlockSize() int { return 32 }
+
+func (h *hashstate) Size() int { return 32 }
+
+func (h *hashstate) Reset() {
+	C.beltHashStart(h.toPtr())
+}
+
+func (h *hashstate) Sum(b []byte) []byte {
+	buf := make([]byte, h.Size())
+	C.beltHashStepG(
+		(*C.octet)(unsafe.Pointer(&buf[0])),
+		h.toPtr(),
+	)
+	return append(b, buf[:h.Size()]...)
+}
+
+func (h *hashstate) Write(p []byte) (int, error) {
+	if len(p) == 0 {
+		// NOTE: is this expected?
+		p = make([]byte, h.BlockSize())
+	}
+	C.beltHashStepH(
+		unsafe.Pointer(&p[0]),
+		C.size_t(len(p)),
+		h.toPtr(),
+	)
+	return len(p), nil
+}
 
 // Belt hash via bee2. `out` should be 32 bytes long
 func Hash(
