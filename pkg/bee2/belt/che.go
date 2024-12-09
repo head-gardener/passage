@@ -6,7 +6,6 @@ package belt
 import "C"
 
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -20,34 +19,13 @@ func CHEUnwrap(
 	iv IV,
 	opt *AEADOpt,
 ) (err error) {
-	var critLen int
-	if opt != nil && opt.critLen != 0 {
-		critLen = opt.critLen
-	} else {
-		critLen = len(crit)
-	}
-	var openLen int
-	if open == nil {
-		open = crit
-		openLen = 0
-	} else if opt != nil && opt.openLen != 0 {
-		openLen = opt.openLen
-	} else {
-		openLen = len(open)
-	}
-
-	if len(out) == 0 {
-		return fmt.Errorf("empty out")
-	}
-	if len(crit) == 0 {
-		return fmt.Errorf("empty crit")
-	}
-	if len(open) == 0 {
-		return fmt.Errorf("empty open")
+	outPtr, crit, critLen, open, openLen, err := prepareOptsAEAD(out, iv, crit, open, opt)
+	if err != nil {
+		return err
 	}
 
 	ret := C.beltCHEUnwrap(
-		unsafe.Pointer(&out[0]),
+		outPtr,
 		unsafe.Pointer(&crit[0]),
 		(C.size_t)(critLen),
 		unsafe.Pointer(&open[0]),
@@ -69,34 +47,13 @@ func CHEWrap(
 	iv IV,
 	opt *AEADOpt,
 ) (mac MAC, err error) {
-	var critLen int
-	if opt != nil && opt.critLen != 0 {
-		critLen = opt.critLen
-	} else {
-		critLen = len(crit)
-	}
-	var openLen int
-	if open == nil {
-		open = crit
-		openLen = 0
-	} else if opt != nil && opt.openLen != 0 {
-		openLen = opt.openLen
-	} else {
-		openLen = len(open)
-	}
-
-	if len(out) == 0 {
-		return mac, fmt.Errorf("empty out")
-	}
-	if len(crit) == 0 {
-		return mac, fmt.Errorf("empty crit")
-	}
-	if len(open) == 0 {
-		return mac, fmt.Errorf("empty open")
+	outPtr, crit, critLen, open, openLen, err := prepareOptsAEAD(out, iv, crit, open, opt)
+	if err != nil {
+		return mac, err
 	}
 
 	ret := C.beltCHEWrap(
-		unsafe.Pointer(&out[0]),
+		outPtr,
 		(*C.octet)(unsafe.Pointer(&mac[0])),
 		unsafe.Pointer(&crit[0]),
 		(C.size_t)(critLen),

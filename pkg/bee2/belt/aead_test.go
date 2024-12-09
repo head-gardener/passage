@@ -15,7 +15,6 @@ func TestAEAD(t *testing.T) {
 	rand.Read(nonce[:])
 	plaintext := []byte("plaintext")
 	additionalData := []byte("additionalData")
-	// buf := make([]byte, len(plaintext) + ciphers[0].Overhead())
 	for i := range ciphers {
 		enc := ciphers[i].Seal(nil, nonce[:], plaintext, additionalData)
 		res, err := ciphers[i].Open(nil, nonce[:], enc, additionalData)
@@ -44,5 +43,8 @@ func TestAEAD(t *testing.T) {
 		if !bytes.Equal(res, plaintext) {
 			t.Fatalf("complex unseal error: %x vs %x", res, plaintext)
 		}
+
+		// empty plaintext, tests for panic
+		_ = ciphers[i].Seal(buf, nonce[:], []byte{}, additionalData)
 	}
 }

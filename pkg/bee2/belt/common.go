@@ -43,3 +43,47 @@ type AEADOpt struct {
 	critLen int
 	openLen int
 }
+
+func prepareOptsAEAD(
+	out []byte,
+	iv IV,
+	c []byte,
+	o []byte,
+	opt *AEADOpt,
+) (outPtr unsafe.Pointer, crit []byte, critLen int, open []byte, openLen int, err error) {
+	if opt != nil && opt.critLen != 0 {
+		critLen = opt.critLen
+	} else {
+		critLen = len(c)
+	}
+
+	if len(c) == 0 {
+		crit = iv[:]
+	} else {
+		crit = c
+	}
+
+	if opt != nil && opt.openLen != 0 {
+		openLen = opt.openLen
+	} else {
+		openLen = len(o)
+	}
+
+	if len(o) == 0 {
+		open = iv[:]
+	} else {
+		open = o
+	}
+
+	if len(out) == 0 {
+		if critLen != 0 {
+			return nil, nil, 0, nil, 0, fmt.Errorf("empty out with unempty crit")
+		} else {
+			outPtr = unsafe.Pointer(&out)
+		}
+	} else {
+		outPtr = unsafe.Pointer(&out[0])
+	}
+
+	return
+}
