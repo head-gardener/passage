@@ -49,11 +49,7 @@ func Accept(st *State) (err error) {
 		return fmt.Errorf("peer already established connection")
 	}
 
-	pass, err := st.conf.GetSecret()
-	if err != nil {
-		tcp.Close()
-		return err
-	}
+	pass := st.conf.GetSecret()
 
 	err = st.netw.Peers[i].conn.Accept(tcp, pass)
 	if err != nil {

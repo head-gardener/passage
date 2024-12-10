@@ -15,7 +15,7 @@ import (
 
 var BignBeltSuite = noise.NewCipherSuite(Bign128, BeltCHE, BeltHash)
 
-func HandshakeInit(initiator bool, psk []byte) (*noise.HandshakeState, error) {
+func Init(initiator bool, psk []byte) (*noise.HandshakeState, error) {
 	return noise.NewHandshakeState(noise.Config{
 		CipherSuite:           BignBeltSuite,
 		Random:                rand.Reader,
@@ -70,13 +70,13 @@ type beltCHE struct {
 
 func (b beltCHE) Decrypt(out []byte, n uint64, ad []byte, ciphertext []byte) ([]byte, error) {
 	var nonce [16]byte
-	binary.LittleEndian.PutUint64(nonce[8:], n)
+	binary.LittleEndian.PutUint64(nonce[:], n)
 	return b.c.Open(out, nonce[:], ciphertext, ad)
 }
 
 func (b beltCHE) Encrypt(out []byte, n uint64, ad []byte, plaintext []byte) []byte {
 	var nonce [16]byte
-	binary.LittleEndian.PutUint64(nonce[8:], n)
+	binary.LittleEndian.PutUint64(nonce[:], n)
 	return b.c.Seal(out, nonce[:], plaintext, ad)
 }
 

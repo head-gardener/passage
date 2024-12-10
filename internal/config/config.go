@@ -14,6 +14,8 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/itzg/go-flagsfiller"
 	"gopkg.in/yaml.v3"
+
+	"github.com/head-gardener/passage/pkg/bee2/belt"
 )
 
 type Config struct {
@@ -161,6 +163,17 @@ func ReadConfig() (conf *Config, err error) {
 	mergo.MergeWithOverwrite(conf, file)
 	mergo.MergeWithOverwrite(conf, env)
 
+	if conf.Secret == "" {
+		sec, err := os.ReadFile(conf.SecretPath)
+		if err != nil {
+			return nil, err
+		}
+		conf.Secret = string(sec)
+	}
+	key := belt.Key{}
+	belt.Hash(key[:], []byte(conf.Secret), nil)
+	conf.Secret = string(key[:])
+
 	if err := verifyConfig(conf); err != nil {
 		return conf, fmt.Errorf("error verifying config: %w", err)
 	}
@@ -168,10 +181,6 @@ func ReadConfig() (conf *Config, err error) {
 	return
 }
 
-func (conf *Config) GetSecret() ([]byte, error) {
-	if conf.Secret != "" {
-		return []byte(conf.Secret), nil
-	} else {
-		return os.ReadFile(conf.SecretPath)
-	}
+func (conf *Config) GetSecret() []byte {
+	return []byte(conf.Secret)
 }

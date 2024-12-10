@@ -35,6 +35,12 @@ func (b beltAEAD) Open(dst []byte, nonce []byte, ciphertext []byte, additionalDa
 	mac := MAC(ciphertext[len(ciphertext)-MACSize:])
 	ciphertext = ciphertext[:len(ciphertext)-MACSize]
 	res, out := sliceForAppend(dst, len(ciphertext))
+	// fmt.Printf("recv: ciphertext: %x\n", ciphertext)
+	// fmt.Printf("recv: len(plaintext): %v\n", len(ciphertext))
+	// fmt.Printf("recv: additionalData: %x\n", additionalData)
+	// fmt.Printf("recv: mac: %x\n", mac)
+	// fmt.Printf("recv: b.key: %x\n", b.key)
+	// fmt.Printf("recv: nonce: %v\n", nonce)
 	err := b.unwrap(out, ciphertext, additionalData, mac, b.key, IV(nonce), nil)
 	return res, err
 }
@@ -45,6 +51,12 @@ func (b beltAEAD) Seal(dst []byte, nonce []byte, plaintext []byte, additionalDat
 	if err != nil {
 		panic(err)
 	}
+	// fmt.Printf("send: plaintext: %x\n", plaintext)
+	// fmt.Printf("send: len(plaintext): %v\n", len(plaintext))
+	// fmt.Printf("send: additionalData: %x\n", additionalData)
+	// fmt.Printf("send: mac: %x\n", mac)
+	// fmt.Printf("send: b.key: %x\n", b.key)
+	// fmt.Printf("send: nonce: %v\n", nonce)
 	copy(out[len(plaintext):], mac[:])
 	return res
 }

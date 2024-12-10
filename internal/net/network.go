@@ -33,10 +33,7 @@ func (netw *Network) EnsureOpen(
 		return
 	}
 
-	pass, err := st.conf.GetSecret()
-	if err != nil {
-		return
-	}
+	pass := st.conf.GetSecret()
 
 	err = netw.Peers[i].conn.Dial(&st.conf.Peers[i].Addr, pass)
 	if err != nil {

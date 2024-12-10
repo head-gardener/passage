@@ -1,13 +1,14 @@
 package net
 
 import (
-	"crypto/rand"
 	"fmt"
 	"net"
 	"sync"
 
+	"github.com/flynn/noise"
+
+	"github.com/head-gardener/passage/internal/handshake"
 	"github.com/head-gardener/passage/pkg/bee2/belt"
-	"github.com/head-gardener/passage/pkg/crypto"
 )
 
 const HeaderSize = len(belt.MAC{})
@@ -18,9 +19,10 @@ const SaltSize = len(belt.Key{})
 // open: tcp != nil
 // transitioning: lock is locked
 type Connection struct {
-	tcp    net.Conn
-	cipher crypto.Cipher
-	lock   sync.Mutex
+	tcp  net.Conn
+	cx   *noise.CipherState
+	cr   *noise.CipherState
+	lock sync.Mutex
 }
 
 func (conn *Connection) String() string {
@@ -37,34 +39,51 @@ func (conn *Connection) isOpenSimple() bool {
 	return conn.tcp != nil
 }
 
-func handshakeInitiator(tcp net.Conn, pass []byte) (cipher crypto.Cipher, err error) {
-	// TODO: sign salt with master key
-	salt := make([]byte, SaltSize)
-	rand.Read(salt)
-	cipher, err = crypto.InitCHE(pass, salt)
+func handshakeInitiator(tcp net.Conn, pass []byte) (cx *noise.CipherState, cr *noise.CipherState, err error) {
+	hs, err := handshake.Init(true, pass)
 	if err != nil {
 		return
 	}
-	_, err = tcp.Write(salt)
+
+	msg, _, _, err := hs.WriteMessage(nil, nil)
 	if err != nil {
 		return
 	}
+	_, err = tcp.Write(msg)
+	if err != nil {
+		return
+	}
+
+	// `<- e` is the same length as `-> e`
+	n, err := tcp.Read(msg)
+	if err != nil {
+		return
+	}
+	_, cx, cr, err = hs.ReadMessage(nil, msg[:n])
 	return
 }
 
-func handshakeResponder(tcp net.Conn, pass []byte) (cipher crypto.Cipher, err error) {
-	salt := make([]byte, SaltSize)
-	n, err := tcp.Read(salt)
+func handshakeResponder(tcp net.Conn, pass []byte) (cx *noise.CipherState, cr *noise.CipherState, err error) {
+	hs, err := handshake.Init(false, pass)
 	if err != nil {
 		return
 	}
-	if n != 32 {
-		return nil, fmt.Errorf("incorrect salt length %d", n)
-	}
-	cipher, err = crypto.InitCHE(pass, salt)
+	msg := make([]byte, 4096)
+
+	n, err := tcp.Read(msg)
 	if err != nil {
 		return
 	}
+	_, _, _, err = hs.ReadMessage(nil, msg[:n])
+	if err != nil {
+		return
+	}
+
+	msg, cx, cr, err = hs.WriteMessage(nil, nil)
+	if err != nil {
+		return
+	}
+	_, err = tcp.Write(msg)
 	return
 }
 
@@ -76,13 +95,15 @@ func (conn *Connection) Accept(tcp net.Conn, pass []byte) (err error) {
 		return fmt.Errorf("already connected to %v", tcp.RemoteAddr())
 	}
 
-	cipher, err := handshakeResponder(tcp, pass)
+	cx, cr, err := handshakeResponder(tcp, pass)
 	if err != nil {
+		tcp.Close()
 		return err
 	}
 
 	conn.tcp = tcp
-	conn.cipher = cipher
+	conn.cx = cx
+	conn.cr = cr
 	return
 }
 
@@ -99,14 +120,15 @@ func (conn *Connection) Dial(addr *net.TCPAddr, pass []byte) (err error) {
 		return
 	}
 
-	cipher, err := handshakeInitiator(tcp, pass)
+	cx, cr, err := handshakeInitiator(tcp, pass)
 	if err != nil {
 		tcp.Close()
 		return
 	}
 
 	conn.tcp = tcp
-	conn.cipher = cipher
+	conn.cx = cx
+	conn.cr = cr
 	return
 }
 
@@ -124,10 +146,9 @@ func (conn *Connection) Close() (closed bool, err error) {
 	}
 	closed = true
 
-	conn.cipher.Finalize()
-
 	conn.tcp = nil
-	conn.cipher = nil
+	conn.cx = nil
+	conn.cr = nil
 	return
 }
 
@@ -137,21 +158,16 @@ func (conn *Connection) Read(b []byte) (n int, err error) {
 		return
 	}
 
-	var mac crypto.MAC
-	body := n - HeaderSize
-	copy(mac[:], b[body:n])
-	err = conn.cipher.Unwrap(b[:body], b[:body], nil, mac)
+	msg, err := conn.cr.Decrypt(b[:0], nil, b[:n])
 	if err != nil {
 		return
 	}
 
-	return body, nil
+	return len(msg), err
 }
 
 func (conn *Connection) Write(b []byte) (n int, err error) {
-	// TODO: zero pads and length in header
-	full := len(b) + HeaderSize
-	if cap(b) < full {
+	if full := len(b) + belt.MACSize; cap(b) < full {
 		return 0, fmt.Errorf(
 			"buffer capacity is too small for header: %d have, %d needed",
 			cap(b),
@@ -159,15 +175,15 @@ func (conn *Connection) Write(b []byte) (n int, err error) {
 		)
 	}
 
-	err = conn.cipher.Wrap(b, b, nil, b[len(b):full])
+	msg, err := conn.cr.Encrypt(b[:0], nil, b)
 	if err != nil {
 		return
 	}
 
-	n, err = conn.tcp.Write(b[:full])
+	n, err = conn.tcp.Write(msg)
 	if err != nil {
 		return
 	}
 
-	return len(b), nil
+	return len(msg), nil
 }

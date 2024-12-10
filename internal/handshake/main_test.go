@@ -4,8 +4,6 @@ import (
 	"crypto/rand"
 	"testing"
 
-	"github.com/flynn/noise"
-
 	"github.com/head-gardener/passage/pkg/bee2/belt"
 
 	. "gopkg.in/check.v1"
@@ -18,29 +16,11 @@ type NoiseSuite struct{}
 var _ = Suite(&NoiseSuite{})
 
 func (NoiseSuite) TestNNpsk0Roundtrip(c *C) {
-	cs := noise.NewCipherSuite(Bign128, BeltCHE, BeltHash)
-
 	psk := make([]byte, 32)
 	rand.Read(psk)
 
-	hsI, err := noise.NewHandshakeState(noise.Config{
-		CipherSuite:           cs,
-		Random:                rand.Reader,
-		Pattern:               noise.HandshakeNN,
-		Initiator:             true,
-		PresharedKey:          psk,
-		PresharedKeyPlacement: 0,
-	})
-	c.Assert(err, IsNil)
-	hsR, err := noise.NewHandshakeState(noise.Config{
-		CipherSuite:           cs,
-		Random:                rand.Reader,
-		Pattern:               noise.HandshakeNN,
-		PresharedKey:          psk,
-		PresharedKeyPlacement: 0,
-	})
-	c.Assert(err, IsNil)
-
+	hsI, err := Init(true, psk)
+	hsR, err := Init(false, psk)
 	overhead := belt.NewCHE(belt.Key(psk)).Overhead()
 
 	// -> e

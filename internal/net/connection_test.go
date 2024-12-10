@@ -7,17 +7,22 @@ import (
 	"testing/quick"
 	"time"
 
-	"github.com/head-gardener/passage/pkg/crypto"
+	"github.com/flynn/noise"
+
+	"github.com/head-gardener/passage/internal/handshake"
+	"github.com/head-gardener/passage/pkg/bee2/belt"
 )
 
-func (conn *Connection) mock(remote net.Conn, pass []byte) (err error) {
-	cipher, err := crypto.InitCHE(pass, []byte("salt"))
+func (conn *Connection) mock(remote net.Conn, passx []byte, passr []byte) (err error) {
+	var psk [32]byte
+	err = belt.Hash(psk[:], passx, nil)
 	if err != nil {
-		return
+		return err
 	}
-
 	conn.tcp = remote
-	conn.cipher = cipher
+	conn.cx = noise.UnsafeNewCipherState(handshake.BignBeltSuite, psk, 0)
+	err = belt.Hash(psk[:], passr, nil)
+	conn.cr = noise.UnsafeNewCipherState(handshake.BignBeltSuite, psk, 0)
 	return
 }
 
@@ -31,17 +36,24 @@ func TestConnetionHandshake(t *testing.T) {
 	pipeB.SetDeadline(time.Now().Add(time.Second))
 
 	pass := []byte("pass")
-	nodeA.mock(pipeA, pass)
-	nodeB.mock(pipeB, pass)
+	nodeA.tcp = pipeA
+	nodeB.tcp = pipeB
+	var psk [32]byte
+	err := belt.Hash(psk[:], pass, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	errs := make(chan error, 1)
 	go func() {
-		cipher, err := handshakeResponder(pipeB, pass)
-		nodeB.cipher = cipher
+		cx, cr, err := handshakeResponder(pipeB, psk[:])
+		nodeB.cr = cr
+		nodeB.cx = cx
 		errs <- err
 	}()
-	cipher, err := handshakeInitiator(pipeA, pass)
-	nodeA.cipher = cipher
+	cx, cr, err := handshakeInitiator(pipeA, psk[:])
+	nodeA.cx = cx
+	nodeA.cr = cr
 	{
 		err := <-errs
 		if err != nil {
@@ -92,9 +104,10 @@ func TestConnetionProp(t *testing.T) {
 	pipeA.SetDeadline(time.Now().Add(time.Second))
 	pipeB.SetDeadline(time.Now().Add(time.Second))
 
-	pass := []byte("pass")
-	nodeA.mock(pipeA, pass)
-	nodeB.mock(pipeB, pass)
+	passA := []byte("passA")
+	passB := []byte("passB")
+	nodeA.mock(pipeA, passA, passB)
+	nodeB.mock(pipeB, passA, passB)
 
 	output := make([]byte, 100)
 	input := make([]byte, 100)
