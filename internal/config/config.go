@@ -115,7 +115,7 @@ func StringToLogLevelHook() mapstructure.DecodeHookFunc {
 
 func verifyConfig(conf *Config) error {
 	if (conf.Secret == "") == (conf.SecretPath == "") {
-		return errors.New(`one of "secret" or "secret-path" must be set`)
+		return errors.New(`one of "secret" or "secretPath" must be set`)
 	}
 
 	if conf.Device.Addr == "" {
@@ -167,6 +167,10 @@ func ReadConfig() (conf *Config, err error) {
 	mergo.MergeWithOverwrite(conf, file)
 	mergo.MergeWithOverwrite(conf, env)
 
+	if err := verifyConfig(conf); err != nil {
+		return conf, fmt.Errorf("error verifying config: %w", err)
+	}
+
 	if conf.Secret == "" {
 		sec, err := os.ReadFile(conf.SecretPath)
 		if err != nil {
@@ -177,10 +181,6 @@ func ReadConfig() (conf *Config, err error) {
 	key := belt.Key{}
 	belt.Hash(key[:], []byte(conf.Secret), nil)
 	conf.Secret = string(key[:])
-
-	if err := verifyConfig(conf); err != nil {
-		return conf, fmt.Errorf("error verifying config: %w", err)
-	}
 
 	return
 }
