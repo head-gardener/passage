@@ -21,7 +21,7 @@ import (
 type Config struct {
 	Device struct {
 		Name string
-		MTU  int
+		Addr string
 	}
 
 	Listener struct {
@@ -45,7 +45,7 @@ type Peer struct {
 func New() (conf *Config) {
 	conf = new(Config)
 
-	conf.Device.MTU = 1430
+	conf.Device.Addr = ""
 	conf.Device.Name = "tun1"
 
 	conf.Listener.Addr = *net.TCPAddrFromAddrPort(netip.MustParseAddrPort("0.0.0.0:53475"))
@@ -115,7 +115,11 @@ func StringToLogLevelHook() mapstructure.DecodeHookFunc {
 
 func verifyConfig(conf *Config) error {
 	if (conf.Secret == "") == (conf.SecretPath == "") {
-		return errors.New(`one of "secret" or "secret-path" has to be defined`)
+		return errors.New(`one of "secret" or "secret-path" must be set`)
+	}
+
+	if conf.Device.Addr == "" {
+		return errors.New(`"device.addr" must be set`)
 	}
 
 	return nil

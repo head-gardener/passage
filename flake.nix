@@ -73,7 +73,7 @@
 
               doCheck = false;
 
-              vendorHash = "sha256-lTGn58gUhQrcKiYHhZiUMc9/DwwBrlaCWiBqbeaMpJE=";
+              vendorHash = "sha256-HPu8qvmR2TVVcCNdF0Xz99/eOS+XTXGaOHnCh41P3ec=";
             };
 
           passage-image = pkgs.dockerTools.buildLayeredImage {
@@ -91,13 +91,6 @@
                 #! /usr/bin/env sh
                 set -e
                 mkdir -p /dev/net && mknod /dev/net/tun c 10 200
-                addr="$1"
-                shift
-                {
-                  sleep 1
-                  ip a add "$addr/24" dev tun1
-                  ip l set dev tun1 up
-                } &
                 exec passage "$@"
               '')
             ];

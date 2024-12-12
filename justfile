@@ -7,14 +7,6 @@ run args = "":
 
 # same as run but doesn't ask for sudo
 run-no-sudo args = "":
-  #!/usr/bin/env sh
-  set -ex
-  {
-    sleep 2
-    pgrep "passage" > /dev/null
-    ip a add 10.1.0.1/24 dev tun1
-    ip l set dev tun1 up
-  } &
   exec go run ./cmd/passage -config ./examples/node1.yml {{ args }}
 
 # formats and checks
@@ -71,7 +63,7 @@ run-docker args="" docker_args="-it": build-docker
   docker run -v ./examples/node2.yml:/config.yml \
     --name passage_test --net passage_test --ip 172.20.0.2 \
     --cap-add NET_ADMIN --rm {{ docker_args }} \
-    passage passage-wrapped 10.1.0.2 {{ args }}
+    passage passage-wrapped {{ args }}
 
 # builds and loads a docker image with nix
 build-docker:

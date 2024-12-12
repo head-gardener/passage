@@ -1,5 +1,6 @@
 device:
   name: tun1
+  addr: "10.100.0.2/24"
 
 listener:
   addr: "172.20.0.2:8888"

@@ -3,7 +3,7 @@
 services:
   node1:
     image: passage
-    command: passage-wrapped 10.1.0.1
+    command: passage-wrapped
     configs:
       - source: node1.yml
         target: /config.yml
@@ -14,7 +14,7 @@ services:
 
   node2:
     image: passage
-    command: passage-wrapped 10.1.0.2
+    command: passage-wrapped
     configs:
       - source: node2.yml
         target: /config.yml
@@ -26,6 +26,8 @@ services:
 configs:
   node1.yml:
     content: |
+      device:
+        addr: "10.1.0.1/24"
       peers:
         - addr: "node2:53475"
       listener:
@@ -36,6 +38,8 @@ configs:
 
   node2.yml:
     content: |
+      device:
+        addr: "10.1.0.2/24"
       peers:
         - addr: "node1:53475"
       listener:
