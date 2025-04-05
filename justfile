@@ -58,10 +58,10 @@ check path = "*": build-docker
 run-docker args="" docker_args="-it": build-docker
   #!/usr/bin/env sh
   set -ex
-  docker network create --subnet=172.20.0.0/24 passage_test
+  docker network create --subnet=172.255.0.0/24 passage_test
   trap 'docker network rm passage_test; exit' EXIT
   docker run -v ./examples/node2.yml:/config.yml \
-    --name passage_test --net passage_test --ip 172.20.0.2 \
+    --name passage_test --net passage_test --ip 172.255.0.2 \
     --cap-add NET_ADMIN --rm {{ docker_args }} \
     passage passage-wrapped {{ args }}
 
