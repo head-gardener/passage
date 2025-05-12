@@ -29,13 +29,17 @@ func HandleConnection(
 			return
 		default:
 		}
-		n, err := conn.Read(bufs[0])
+		n, total, err := conn.ReadWithTotal(bufs[0])
 		if err != nil {
 			st.log.Error("reading from peer", "err", err, "remote", remote)
 			st.netw.Close(id, st)
 			continue
 		}
 		st.log.Debug("peer read", "n", n, "remote", remote)
+		if st.metrics != nil {
+			st.metrics.PacketsReceived.WithLabelValues(remote).Inc()
+			st.metrics.BytesReceived.WithLabelValues(remote).Add(float64(total))
+		}
 
 		n, err = st.tun.Write(bufs[0][:n])
 		if err != nil {
@@ -43,5 +47,9 @@ func HandleConnection(
 			continue
 		}
 		st.log.Debug("tun write", "n", n, "remote", remote)
+		if st.metrics != nil {
+			st.metrics.PacketsSentOs.Inc()
+			st.metrics.BytesSentOs.Add(float64(n))
+		}
 	}
 }

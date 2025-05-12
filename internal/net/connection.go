@@ -152,7 +152,7 @@ func (conn *Connection) Close() (closed bool, err error) {
 	return
 }
 
-func (conn *Connection) Read(b []byte) (n int, err error) {
+func (conn *Connection) ReadWithTotal(b []byte) (n int, total int, err error) {
 	n, err = conn.tcp.Read(b)
 	if err != nil {
 		return
@@ -163,7 +163,12 @@ func (conn *Connection) Read(b []byte) (n int, err error) {
 		return
 	}
 
-	return len(msg), err
+	return len(msg), n, err
+}
+
+func (conn *Connection) Read(b []byte) (n int, err error) {
+	n, _, err = conn.ReadWithTotal(b)
+	return
 }
 
 func (conn *Connection) Write(b []byte) (n int, err error) {

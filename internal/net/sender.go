@@ -26,24 +26,38 @@ func Sender(
 			continue
 		}
 		st.log.Debug("tun read", "n", n)
+		if st.metrics != nil {
+			st.metrics.PacketsReceivedOs.Inc()
+			st.metrics.BytesReceivedOs.Add(float64(n))
+		}
 
 		for i := range st.conf.Peers {
 			init, err := st.netw.EnsureOpen(i, handler, st)
 			if err != nil {
 				st.log.Error("error connecting to peer", "err", err)
+				if st.metrics != nil {
+					st.metrics.PacketsFailed.WithLabelValues(st.conf.Peers[i].Addr.String()).Inc()
+				}
 				continue
 			}
 			if init {
 				st.log.Info("dialed peer", "peer", st.conf.Peers[i])
 			}
 
-			_, err = st.netw.Peers[i].conn.Write(bufs[0][:n])
+			sent, err := st.netw.Peers[i].conn.Write(bufs[0][:n])
 			if err != nil {
 				st.log.Error("error sending to peer", "err", err)
 				st.netw.Close(i, st)
+				if st.metrics != nil {
+					st.metrics.PacketsFailed.WithLabelValues(st.conf.Peers[i].Addr.String()).Inc()
+				}
 				continue
 			}
 			st.log.Debug("peer write", "peer", st.conf.Peers[i])
+			if st.metrics != nil {
+				st.metrics.PacketsSent.WithLabelValues(st.conf.Peers[i].Addr.String()).Inc()
+				st.metrics.BytesSent.WithLabelValues(st.conf.Peers[i].Addr.String()).Add(float64(sent))
+			}
 		}
 	}
 }

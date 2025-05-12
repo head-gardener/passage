@@ -73,6 +73,7 @@ func (netw *Network) startConnectionHandler(
 ) {
 	if netw.metrics != nil {
 		netw.metrics.TunnelStatus.WithLabelValues(st.conf.Peers[i].Addr.String()).Set(1)
+		netw.metrics.ConnectionsEstablished.WithLabelValues(st.conf.Peers[i].Addr.String()).Inc()
 	}
 	done := make(chan struct{}, 2)
 	if netw.Peers[i].done != nil {
