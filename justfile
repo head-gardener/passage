@@ -3,7 +3,7 @@ default:
 
 # starts client and configures its interface
 run args = "":
-  sudo -E just run-no-sudo
+  sudo -E just run-no-sudo "{{ args }}"
 
 # same as run but doesn't ask for sudo
 run-no-sudo args = "":

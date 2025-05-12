@@ -14,4 +14,7 @@ peers:
 metrics:
   enabled: true
 
+socket:
+  enabled: true
+
 secret: secret

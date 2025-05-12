@@ -8,6 +8,7 @@ import (
 	"github.com/head-gardener/passage/internal/config"
 	"github.com/head-gardener/passage/internal/metrics"
 	"github.com/head-gardener/passage/internal/net"
+	"github.com/head-gardener/passage/internal/socket"
 )
 
 func initLog() (log *slog.Logger, lvl *slog.LevelVar) {
@@ -24,20 +25,27 @@ func initLog() (log *slog.Logger, lvl *slog.LevelVar) {
 func main() {
 	log, lvl := initLog()
 
-	conf, err := config.ReadConfig()
+	cmd, conf, err := config.ReadConfig()
 	if err != nil {
 		log.Error("reading config", "err", err)
 		os.Exit(1)
+	}
+
+	switch cmd {
+	case config.CommandStatus:
+		socket.Status(conf)
+		return
+	default:
 	}
 
 	lvl.Set(conf.Log.Level)
 
 	log.Debug("final config", "val", fmt.Sprintf("%+v", conf))
 
-	var m *metrics.Metrics = nil;
+	var m *metrics.Metrics = nil
 
 	if conf.Metrics.Enabled {
-		m = metrics.New();
+		m = metrics.New()
 		go metrics.Serve(log, conf)
 	}
 
@@ -45,6 +53,10 @@ func main() {
 	if err != nil {
 		log.Error("initializing", "err", err)
 		os.Exit(1)
+	}
+
+	if conf.Socket.Enabled {
+		go socket.Listen(log, st, conf)
 	}
 
 	go net.Listen(st)

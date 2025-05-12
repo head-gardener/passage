@@ -42,6 +42,7 @@ func Sender(
 			}
 			if init {
 				st.log.Info("dialed peer", "peer", st.conf.Peers[i])
+				st.updateLastSeen(i)
 			}
 
 			sent, err := st.netw.Peers[i].conn.Write(bufs[0][:n])
@@ -54,6 +55,7 @@ func Sender(
 				continue
 			}
 			st.log.Debug("peer write", "peer", st.conf.Peers[i])
+			st.updateLastSeen(i)
 			if st.metrics != nil {
 				st.metrics.PacketsSent.WithLabelValues(st.conf.Peers[i].Addr.String()).Inc()
 				st.metrics.BytesSent.WithLabelValues(st.conf.Peers[i].Addr.String()).Add(float64(sent))

@@ -26,11 +26,16 @@ type Config struct {
 
 	Metrics struct {
 		Enabled bool
-		Addr string
+		Addr    string
 	}
 
 	Listener struct {
 		Addr net.TCPAddr
+	}
+
+	Socket struct {
+		Enabled bool
+		Path    string
 	}
 
 	Log struct {
@@ -56,6 +61,9 @@ func New() (conf *Config) {
 	conf.Metrics.Enabled = false
 	conf.Metrics.Addr = "0.0.0.0:9031"
 
+	conf.Socket.Enabled = false
+	conf.Socket.Path = "/var/run/passage.sock"
+
 	conf.Listener.Addr = *net.TCPAddrFromAddrPort(netip.MustParseAddrPort("0.0.0.0:53475"))
 
 	conf.Log.Level = slog.LevelInfo
@@ -67,6 +75,13 @@ func New() (conf *Config) {
 
 	return conf
 }
+
+type Command int
+
+const (
+	CommandServe Command = iota
+	CommandStatus
+)
 
 func StringToTCPAddrHook() mapstructure.DecodeHookFunc {
 	return func(
@@ -133,7 +148,7 @@ func verifyConfig(conf *Config) error {
 	return nil
 }
 
-func ReadConfig() (conf *Config, err error) {
+func ReadConfig() (cmd Command, conf *Config, err error) {
 	var (
 		confPath  string
 		file, env Config
@@ -149,6 +164,17 @@ func ReadConfig() (conf *Config, err error) {
 	flag.StringVar(&confPath, "config", "./config.yml", "config file path")
 
 	flag.Parse()
+
+	if flag.NArg() != 0 {
+		switch flag.Arg(0) {
+		case "serve":
+			cmd = CommandServe
+		case "status":
+			cmd = CommandStatus
+		default:
+			return cmd, conf, fmt.Errorf("unknown command: %s", flag.Arg(0))
+		}
+	}
 
 	f, err := os.ReadFile(confPath)
 	if err != nil {
@@ -176,13 +202,13 @@ func ReadConfig() (conf *Config, err error) {
 	mergo.MergeWithOverwrite(conf, env)
 
 	if err := verifyConfig(conf); err != nil {
-		return conf, fmt.Errorf("error verifying config: %w", err)
+		return cmd, conf, fmt.Errorf("error verifying config: %w", err)
 	}
 
 	if conf.Secret == "" {
 		sec, err := os.ReadFile(conf.SecretPath)
 		if err != nil {
-			return nil, err
+			return cmd, nil, err
 		}
 		conf.Secret = string(sec)
 	}

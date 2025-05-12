@@ -4,6 +4,8 @@
 #! docker compose -f "$c" restart node1
 #! sleep 2
 #! docker compose -f "$c" exec node1 ping -c 2 10.1.0.2
+#! echo ------ Socket
+#! docker compose -f "$c" exec node1 passage status
 
 services:
   node1:
@@ -40,6 +42,9 @@ configs:
       log:
         level: debug
       secret: hey
+      socket:
+        enabled: true
+        path: /sock
 
   node2.yml:
     content: |

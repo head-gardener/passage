@@ -73,7 +73,7 @@
 
               doCheck = false;
 
-              vendorHash = "sha256-1Y0NodmIsloJ2tHTAusYUf1LwwIQaifsZg9AmQe4A5o=";
+              vendorHash = "sha256-/1azpTkaBE8mc1qV/miZEiL4u28RZSZmxAfEKs6EqUk=";
             };
 
           passage-image = pkgs.dockerTools.buildLayeredImage {
@@ -82,7 +82,8 @@
 
             contents = with pkgs; [
               coreutils
-              dash
+              bash
+              bind
               iproute
               iputils
               netcat

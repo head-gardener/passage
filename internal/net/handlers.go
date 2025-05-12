@@ -36,6 +36,7 @@ func HandleConnection(
 			continue
 		}
 		st.log.Debug("peer read", "n", n, "remote", remote)
+		st.updateLastSeen(id)
 		if st.metrics != nil {
 			st.metrics.PacketsReceived.WithLabelValues(remote).Inc()
 			st.metrics.BytesReceived.WithLabelValues(remote).Add(float64(total))

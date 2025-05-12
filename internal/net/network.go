@@ -13,8 +13,9 @@ type Network struct {
 }
 
 type Peer struct {
-	conn Connection
-	done chan<- struct{}
+	conn     Connection
+	done     chan<- struct{}
+	lastSeen time.Time
 }
 
 func New(

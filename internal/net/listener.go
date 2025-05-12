@@ -44,6 +44,7 @@ func Accept(st *State) (err error) {
 	}
 
 	st.log.Info("initialized connection", "remote", remoteAddr.String())
+	st.updateLastSeen(i)
 	if st.netw.IsOpen(i) {
 		tcp.Close()
 		return fmt.Errorf("peer already established connection")

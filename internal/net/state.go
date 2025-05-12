@@ -4,6 +4,7 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"time"
 
 	"github.com/net-byte/water"
 	"github.com/vishvananda/netlink"
@@ -60,4 +61,16 @@ func Init(log *slog.Logger, conf *config.Config, m *metrics.Metrics) (st *State,
 	st.metrics = m
 
 	return
+}
+
+func (st *State) IsConnected(i int) bool {
+	return st.netw.Peers[i].conn.isOpenSimple()
+}
+
+func (st *State) LastSeen(i int) time.Time {
+	return st.netw.Peers[i].lastSeen
+}
+
+func (st *State) updateLastSeen(i int) {
+	st.netw.Peers[i].lastSeen = time.Now()
 }
