@@ -1,13 +1,13 @@
 package net
 
 import (
-	"log/slog"
-
 	"github.com/head-gardener/passage/internal/config"
+	"github.com/head-gardener/passage/internal/metrics"
 )
 
 type Network struct {
-	Peers []Peer
+	Peers   []Peer
+	metrics *metrics.Metrics
 }
 
 type Peer struct {
@@ -17,9 +17,11 @@ type Peer struct {
 
 func New(
 	conf *config.Config,
+	metrcics *metrics.Metrics,
 ) (netw *Network) {
 	netw = new(Network)
 	netw.Peers = make([]Peer, len(conf.Peers))
+	netw.metrics = metrcics
 	return
 }
 
@@ -54,16 +56,22 @@ func (netw *Network) startConnectionHandler(
 	handler ConnectionHandler,
 	st *State,
 ) {
+	if netw.metrics != nil {
+		netw.metrics.TunnelStatus.WithLabelValues(st.conf.Peers[i].Addr.String()).Set(1)
+	}
 	done := make(chan struct{}, 2)
 	go handler(i, done, &netw.Peers[i].conn, st)
 }
 
-func (netw *Network) Close(i int, log *slog.Logger) error {
+func (netw *Network) Close(i int, st *State) error {
 	netw.Peers[i].done <- struct{}{}
-	log.Info("closing connection", "remote", netw.Peers[i].conn.String())
+	st.log.Info("closing connection", "remote", netw.Peers[i].conn.String())
 	closed, err := netw.Peers[i].conn.Close()
 	if !closed {
-		log.Warn("close requested on a nil connection")
+		st.log.Warn("close requested on a nil connection")
+	}
+	if err != nil && netw.metrics != nil {
+		netw.metrics.TunnelStatus.WithLabelValues(st.conf.Peers[i].Addr.String()).Set(0)
 	}
 	return err
 }

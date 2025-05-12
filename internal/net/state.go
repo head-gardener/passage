@@ -5,20 +5,23 @@ import (
 	"log/slog"
 	"net"
 
-	"github.com/head-gardener/passage/internal/config"
 	"github.com/net-byte/water"
 	"github.com/vishvananda/netlink"
+
+	"github.com/head-gardener/passage/internal/config"
+	"github.com/head-gardener/passage/internal/metrics"
 )
 
 type State struct {
+	conf     *config.Config
 	listener net.Listener
+	log      *slog.Logger
+	metrics  *metrics.Metrics
 	netw     *Network
 	tun      io.ReadWriteCloser
-	log      *slog.Logger
-	conf     *config.Config
 }
 
-func Init(log *slog.Logger, conf *config.Config) (st *State, err error) {
+func Init(log *slog.Logger, conf *config.Config, m *metrics.Metrics) (st *State, err error) {
 	st = new(State)
 
 	st.listener, err = net.ListenTCP("tcp", &conf.Listener.Addr)
@@ -26,7 +29,7 @@ func Init(log *slog.Logger, conf *config.Config) (st *State, err error) {
 		return
 	}
 
-	st.netw = New(conf)
+	st.netw = New(conf, m)
 
 	devconf := water.Config{DeviceType: water.TUN}
 	devconf.Name = conf.Device.Name
@@ -54,6 +57,7 @@ func Init(log *slog.Logger, conf *config.Config) (st *State, err error) {
 
 	st.log = log
 	st.conf = conf
+	st.metrics = m
 
 	return
 }

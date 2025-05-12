@@ -24,6 +24,11 @@ type Config struct {
 		Addr string
 	}
 
+	Metrics struct {
+		Enabled bool
+		Addr string
+	}
+
 	Listener struct {
 		Addr net.TCPAddr
 	}
@@ -47,6 +52,9 @@ func New() (conf *Config) {
 
 	conf.Device.Addr = ""
 	conf.Device.Name = "tun1"
+
+	conf.Metrics.Enabled = false
+	conf.Metrics.Addr = "0.0.0.0:9031"
 
 	conf.Listener.Addr = *net.TCPAddrFromAddrPort(netip.MustParseAddrPort("0.0.0.0:53475"))
 

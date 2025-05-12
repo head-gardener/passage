@@ -73,7 +73,7 @@
 
               doCheck = false;
 
-              vendorHash = "sha256-v+6K6zdMmTP6jelIwj6etcBRFjZDGUXUUjSFaT4LVbk=";
+              vendorHash = "sha256-1Y0NodmIsloJ2tHTAusYUf1LwwIQaifsZg9AmQe4A5o=";
             };
 
           passage-image = pkgs.dockerTools.buildLayeredImage {

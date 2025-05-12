@@ -1,6 +1,6 @@
 device:
   name: tun1
-  addr: "10.100.0.1/24"
+  addr: "10.100.99.1/24"
 
 listener:
   addr: "172.255.0.1:8888"
@@ -10,5 +10,8 @@ log:
 
 peers:
   - addr: "172.255.0.2:8888"
+
+metrics:
+  enabled: true
 
 secret: secret

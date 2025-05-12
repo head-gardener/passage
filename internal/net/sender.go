@@ -11,6 +11,12 @@ func Sender(
 		bufs[i] = make([]byte, 2000)
 	}
 
+	for i := range st.conf.Peers {
+		if st.metrics != nil {
+			st.metrics.TunnelStatus.WithLabelValues(st.conf.Peers[i].Addr.String()).Set(0)
+		}
+	}
+
 	for {
 		var err error
 
@@ -34,7 +40,7 @@ func Sender(
 			_, err = st.netw.Peers[i].conn.Write(bufs[0][:n])
 			if err != nil {
 				st.log.Error("error sending to peer", "err", err)
-				st.netw.Close(i, st.log)
+				st.netw.Close(i, st)
 				continue
 			}
 			st.log.Debug("peer write", "peer", st.conf.Peers[i])

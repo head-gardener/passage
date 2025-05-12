@@ -32,7 +32,7 @@ func HandleConnection(
 		n, err := conn.Read(bufs[0])
 		if err != nil {
 			st.log.Error("reading from peer", "err", err, "remote", remote)
-			st.netw.Close(id, st.log)
+			st.netw.Close(id, st)
 			continue
 		}
 		st.log.Debug("peer read", "n", n, "remote", remote)

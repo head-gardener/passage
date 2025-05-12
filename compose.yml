@@ -1,0 +1,17 @@
+configs:
+  prom.yml:
+    content: |
+      scrape_configs:
+        - job_name: passage
+          scrape_interval: 5s
+          static_configs:
+            - targets:
+                - localhost:9031
+
+services:
+  prometheus:
+    image: prom/prometheus
+    command: --config.file=/prom.yml
+    configs:
+      - prom.yml
+    network_mode: host
