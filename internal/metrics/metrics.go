@@ -24,7 +24,7 @@ func New() (m *Metrics) {
 			Name:      "tunnel_status",
 			Help:      "Tunnel status",
 		},
-		[]string{"peer"},
+		[]string{"remote"},
 	)
 
 	return

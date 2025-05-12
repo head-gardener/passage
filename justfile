@@ -50,7 +50,7 @@ check path = "*": build-docker
     trap 'echo "$checks" | xargs -I _ docker compose -f _ down; exit' EXIT
     sleep 2
     cmd="$(sed -nr 's/#! (.*)/\1/p' "$c")"
-    docker compose -f "$c" exec $cmd
+    c="$c" sh -c "set -exo pipefail; $cmd"
     docker compose -f "$c" down
   done
 

@@ -1,6 +1,8 @@
 package net
 
 import (
+	"time"
+
 	"github.com/head-gardener/passage/internal/config"
 	"github.com/head-gardener/passage/internal/metrics"
 )
@@ -51,6 +53,19 @@ func (netw *Network) IsOpen(i int) (open bool) {
 	return netw.Peers[i].conn.IsOpen()
 }
 
+func (netw *Network) sendDone(
+	i int,
+	st *State,
+) {
+	select {
+	case netw.Peers[i].done <- struct{}{}:
+	case <-time.After(3 * time.Second):
+		st.log.Error("couldn't close hanging channel, a handler might still be running", "remote", netw.Peers[i].conn.String())
+	}
+	close(netw.Peers[i].done)
+	netw.Peers[i].done = nil
+}
+
 func (netw *Network) startConnectionHandler(
 	i int,
 	handler ConnectionHandler,
@@ -60,15 +75,21 @@ func (netw *Network) startConnectionHandler(
 		netw.metrics.TunnelStatus.WithLabelValues(st.conf.Peers[i].Addr.String()).Set(1)
 	}
 	done := make(chan struct{}, 2)
+	if netw.Peers[i].done != nil {
+		st.log.Warn("hanging channel found, attempting to close...", "remote", netw.Peers[i].conn.String())
+		netw.sendDone(i, st)
+	}
+	netw.Peers[i].done = done
 	go handler(i, done, &netw.Peers[i].conn, st)
 }
 
 func (netw *Network) Close(i int, st *State) error {
-	netw.Peers[i].done <- struct{}{}
+	netw.sendDone(i, st)
+
 	st.log.Info("closing connection", "remote", netw.Peers[i].conn.String())
 	closed, err := netw.Peers[i].conn.Close()
 	if !closed {
-		st.log.Warn("close requested on a nil connection")
+		st.log.Warn("close requested on a nil connection", "remote", netw.Peers[i].conn.String())
 	}
 	if err != nil && netw.metrics != nil {
 		netw.metrics.TunnelStatus.WithLabelValues(st.conf.Peers[i].Addr.String()).Set(0)

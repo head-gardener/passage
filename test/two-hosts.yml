@@ -1,4 +1,9 @@
-#! node1 ping -c 4 10.1.0.2
+#! echo ------ Connectivity
+#! docker compose -f "$c" exec node1 ping -c 4 10.1.0.2
+#! echo ------ Restarts
+#! docker compose -f "$c" restart node1
+#! sleep 2
+#! docker compose -f "$c" exec node1 ping -c 2 10.1.0.2
 
 services:
   node1:
