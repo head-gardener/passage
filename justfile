@@ -24,6 +24,10 @@ test-props:
 format:
   treefmt
 
+binaries:
+  rm -fr ./bin
+  nix develop .#static -c go build -ldflags '-w -extldflags "-static"' -buildvcs=false -o ./bin/passage-x86_64-$(git describe --tags --dirty --always) ./cmd/passage/
+
 # verfies that everything is packaged correctly and starts
 check-packaging:
   #!/usr/bin/env sh
@@ -33,6 +37,8 @@ check-packaging:
   sleep 2
   nix build .#passage --print-out-paths | xargs -I _ sh -c "_/bin/passage -help"
   just run-docker -help ""
+  just binaries
+  ls ./bin/passage-x86_64-* | xargs -I _ sh -c "_ --help"
 
 # repeatedly listens for logs from docker compose
 watch-logs:

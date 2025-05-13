@@ -39,7 +39,24 @@
             just
             self'.packages.bee2
             config.treefmt.build.wrapper
+            ansible
+            molecule
           ];
+        };
+
+        devShells.static = pkgs.mkShell rec {
+          packages = with pkgs; [
+            go
+          ];
+
+          buildInputs = [
+            self'.packages.bee2
+            pkgs.glibc.static
+          ];
+
+          LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
+          GOOS = "linux";
+          CGO_ENABLED = "1";
         };
 
         formatter = config.treefmt.build.wrapper;
@@ -100,7 +117,7 @@
           };
 
           bee2 = with pkgs;
-            stdenv.mkDerivation {
+            pkgs.pkgsMusl.stdenv.mkDerivation {
               pname = "bee2";
               version = "v2.1.4";
 

@@ -1,6 +1,6 @@
 package belt
 
-// #cgo LDFLAGS: -lbee2
+// #cgo LDFLAGS: -lbee2_static
 // #include <stdlib.h>
 // #include <bee2/crypto/belt.h>
 import "C"

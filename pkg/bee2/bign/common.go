@@ -1,6 +1,6 @@
 package bign
 
-// #cgo LDFLAGS: -lbee2
+// #cgo LDFLAGS: -lbee2_static
 // #include <stdlib.h>
 // #include <bee2/crypto/bign.h>
 // #include <bee2/core/err.h>
