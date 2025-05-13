@@ -44,6 +44,12 @@
           ];
         };
 
+        devShells.ci = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            just
+          ];
+        };
+
         devShells.static = pkgs.mkShell rec {
           packages = with pkgs; [
             go
