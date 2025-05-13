@@ -1,0 +1,15 @@
+passage_version: "0.0.1"
+passage_config_path: /etc/passage/config.yaml
+passage_install_path: /usr/local/bin/passage
+passage_user: passage
+
+passage_listener_port: "5888"
+passage_listener_addr: "0.0.0.0"
+passage_secret: secret
+passage_device_name: tun1
+passage_socket_enabled: "true"
+passage_socket_path: /var/run/passage/passage.sock
+passage_peers: "{{ groups['passage']
+                   | difference([inventory_hostname])
+                   | map('extract', hostvars, 'ansible_hostname')
+                   | list }}"

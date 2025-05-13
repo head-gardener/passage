@@ -1,0 +1,42 @@
+---
+driver:
+  name: docker
+
+platforms:
+  - name: instance1
+    image: travisci/ubuntu-systemd:22.04
+    privileged: True
+    volume_mounts:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:rw"
+    command: "/lib/systemd/systemd"
+    networks:
+      - name: passage-molecule
+    groups:
+      - passage
+
+  - name: instance2
+    image: travisci/ubuntu-systemd:22.04
+    privileged: True
+    volume_mounts:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:rw"
+    command: "/lib/systemd/systemd"
+    networks:
+      - name: passage-molecule
+    groups:
+      - passage
+
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      passage:
+        passage_extra_config:
+          log:
+            level: debug
+          metrics:
+            enabled: true
+    host_vars:
+      instance1:
+        passage_device_addr: 10.100.99.1/24
+      instance2:
+        passage_device_addr: 10.100.99.2/24

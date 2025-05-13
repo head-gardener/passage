@@ -1,0 +1,21 @@
+device:
+  name: {{ passage_device_name }}
+  addr: {{ passage_device_addr }}
+
+listener:
+  addr: "{{ passage_listener_addr }}:{{ passage_listener_port }}"
+
+peers:
+  {% for peer in passage_peers %}
+  - addr: "{{ peer }}:{{ passage_listener_port }}"
+  {% endfor %}
+
+secret: {{ passage_secret }}
+
+socket:
+  enabled: {{ passage_socket_enabled }}
+  path: {{ passage_socket_path }}
+
+{% if passage_extra_config is defined %}
+{{ passage_extra_config | to_nice_yaml }}
+{% endif %}

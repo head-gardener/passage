@@ -1,0 +1,23 @@
+[Unit]
+Description=Passage
+After=network.target
+Requires=network.target
+
+[Service]
+User={{ passage_user }}
+ExecStart={{ passage_install_path }} --config {{ passage_config_path }}
+{% if passage_socket_enabled %}
+RuntimeDirectory=passage
+RuntimeDirectoryMode=0750
+{% endif %}
+Restart=on-failure
+
+CapabilityBoundingSet=CAP_NET_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN
+PrivateDevices=no
+ProtectSystem=full
+ProtectHome=yes
+NoNewPrivileges=no
+
+[Install]
+WantedBy=multi-user.target

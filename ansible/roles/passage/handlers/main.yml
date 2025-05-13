@@ -1,0 +1,8 @@
+- name: daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: restart passage
+  ansible.builtin.systemd:
+    name: passage
+    state: restarted

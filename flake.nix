@@ -40,7 +40,11 @@
             self'.packages.bee2
             config.treefmt.build.wrapper
             ansible
-            molecule
+            (python3.withPackages (ps: [
+              ps.molecule
+              ps.molecule-plugins
+              ps.docker
+            ]))
           ];
         };
 
